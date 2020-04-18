@@ -65,9 +65,13 @@ def CreateIK(jntIKList):
     CTRL_name = str(side) + "arm_IK_CTRL"
     CreateStarCTRL(CTRL_name, 0.6)
     
+    # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(jntIKList[2], str(CTRL_name) + '_offset_GRP')
     pm.delete(tempConst)
 
+    # create IK handle 
+    arm_ik = pm.ikHandle( n = str(side) + 'IK_Handle', sj=jntIKList[0], ee=jntIKList[2])
+    pm.parent(arm_ik[0],CTRL_name)
     
 
 # ================================ # 

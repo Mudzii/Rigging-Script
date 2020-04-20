@@ -204,8 +204,8 @@ def CreateFK(jntFKList):
 # ================================ # 
 def IK_FKChain(jnList):
     
-    global IKJntList
     global FKJntList
+    global IKJntList
     
     # create IK jnt chain
     IKChain = cmds.duplicate(str(jnList[1]), n= str(jnList[1] + '_IK'))[0]
@@ -243,6 +243,9 @@ def IK_FKChain(jnList):
 
 def CreateArm(jntRadius):
     
+    global jntIKList
+    global jntFKList
+    
     # create simple arm jnts
     clavicle = pm.joint(n = str(side) + 'clavicle_jnt', p = (1,0,0), rad = jntRadius) 
     shoulder = pm.joint(n = str(side) + 'shoulder_jnt', p = (2,0.3,0.4), rad = jntRadius) 
@@ -263,9 +266,9 @@ def CreateArm(jntRadius):
     jntList.append(elbow)
     jntList.append(wrist)
     
+    # create IK FK jnts
     IK_FKChain(jntList)
-    
-    
+       
     # create twist joints    
     twistJntRadius = jntRadius + 0.5
     CreateTwistJnt(twistJntRadius, 'shoulder_twist_jnt', side, shoulder, 'none', False, True)
@@ -274,8 +277,17 @@ def CreateArm(jntRadius):
     CreateTwistJnt(twistJntRadius, 'elbow_twist_jnt', side, elbow, 'none', False, True)
     CreateTwistJnt(twistJntRadius, 'radius_twist_jnt', side, elbow, wrist, True, True)
     CreateTwistJnt(twistJntRadius, 'wrist_twist_jnt', side, wrist, elbow, False, False)
+    
+    # constrain jnts to IK and FK jnts 
+    shoulderConstr = pm.parentConstraint(FKJntList[0], IKJntList[0], str(shoulder), mo = False, w=1)
+    elbowConstr = pm.parentConstraint(FKJntList[1], IKJntList[1], str(elbow), mo = False, w=1)
+    wristConstr = pm.parentConstraint(FKJntList[2], IKJntList[2], str(wrist), mo = False, w=1)
+    
 
+    
+    
  
 
-
+# ======================================================================== # 
 CreateArm(0.5)
+

@@ -25,6 +25,19 @@ def Distance(objA, objB):
 	
     return sqrt(pow(vecA[0]-vecB[0],2)+pow(vecA[1]-vecB[1],2)+pow(vecA[2]-vecB[2],2))
 
+# ================================ #
+def RecolourCtrl(CTRL_name):
+    
+    pm.setAttr(str(CTRL_name) + '.overrideEnabled', 1)
+    pm.setAttr(str(CTRL_name) + '.overrideRGBColors', 1)
+    
+    if CTRL_name[0] == 'L':
+        pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 1, 0, 0)
+    elif CTRL_name[0] == 'R':
+        pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 0, 0, 1)       
+    else: 
+        pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 1, 1, 0) 
+
 # ================================ # 
 def CreateStarCTRL(CTRL_name, rad):
     nurbCTRL = cmds.circle( n = str(CTRL_name), nr =(1,0,0), c=(0, 0, 0), r= rad )
@@ -40,15 +53,16 @@ def CreateStarCTRL(CTRL_name, rad):
     
     offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
     pm.parent(nurbCTRL[0], offset_GRP)
+    
+    RecolourCtrl(CTRL_name)
 
 # ================================ #
 def ReparentShape(nurbCTRL, parentCTRL):
     ctrlName = str(nurbCTRL[0])
-    print ctrlName
+
     shapes = pm.listRelatives(ctrlName)
     shape = shapes[0]
-    
-    print shape
+ 
     pm.parent(shape,parentCTRL[0], relative = True, shape= True)
     pm.delete(ctrlName)
     
@@ -79,6 +93,8 @@ def CreateBallCTRL(CTRL_name, rad):
     CleanHist(nurbCTRL[0])
     offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
     #pm.parent(nurbCTRL[0], offset_GRP)
+    
+    RecolourCtrl(CTRL_name)
     
 # ================================ #
 def CreateTwistJnt(jntRadius, jntName, side, prntJnt, nxtJnt, moveConst, Reparent):
@@ -157,9 +173,7 @@ def IK_FKChain(jnList):
     # create FK jnt chain
     FKChain = cmds.duplicate(str(jnList[1]), n= str(jnList[1] + '_FK'))[0]
     pm.parent(FKChain, world=True )
-    
-      
-    
+     
     # rename chains
     dagObjFK = pm.listRelatives(FKChain, ad=True, type="joint")
     dagObjIK = pm.listRelatives(IKChain, ad=True, type="joint")
@@ -174,11 +188,12 @@ def IK_FKChain(jnList):
         
     IKJntList.append(IKChain)
     FKJntList.append(FKChain)
-      
+    
+    # reverse order of list  
     IKJntList = IKJntList[::-1]
     FKJntList = FKJntList[::-1]
     
-    
+    # create IK chain
     CreateIK(IKJntList)    
     
     

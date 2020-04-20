@@ -4,7 +4,6 @@ import maya.cmds as cmds
 
 jntList = []
 del jntList[:]
-side = 'L_'
 
 IKJntList = []
 del IKJntList[:]
@@ -48,15 +47,15 @@ def ReparentShape(nurbCTRL, parentCTRL):
     pm.delete(ctrlName)
     
 # ================================ # 
-def CreateStarCTRL(CTRL_name, rad):
+def CreateStarCTRL(CTRL_name, rad, scle, norm):
     
-    nurbCTRL = cmds.circle( n = str(CTRL_name), nr =(1,0,0), c=(0, 0, 0), r= rad )
+    nurbCTRL = cmds.circle( n = str(CTRL_name), nr =norm, c=(0, 0, 0), r= rad )
     
     curveCVs = cmds.ls('{0}.cv[:]'.format(CTRL_name), fl = True)
     selList = [curveCVs[0], curveCVs[2], curveCVs[4], curveCVs[6]]
     
     sel = pm.select(selList)
-    pm.scale(sel, [0.5, 0.5, 0.5])
+    pm.scale(sel, scle)
     
     CleanHist(nurbCTRL[0])
     
@@ -144,7 +143,7 @@ def CreateIK(jntIKList):
     
     # create arm CTRL
     Arm_CTRL = str(side) + "arm_IK_CTRL"
-    CreateStarCTRL(Arm_CTRL, 0.6)
+    CreateStarCTRL(Arm_CTRL, 0.6, [0.4, 0.4, 0.4], (1,0,0))
     
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(jntIKList[2], str(Arm_CTRL) + '_offset_GRP')
@@ -241,7 +240,7 @@ def IK_FKChain(jnList):
     
 # ================================ # 
 
-def CreateArm(jntRadius):
+def CreateArm(side, jntRadius):
     
     global jntIKList
     global jntFKList
@@ -283,11 +282,23 @@ def CreateArm(jntRadius):
     elbowConstr = pm.parentConstraint(FKJntList[1], IKJntList[1], str(elbow), mo = False, w=1)
     wristConstr = pm.parentConstraint(FKJntList[2], IKJntList[2], str(wrist), mo = False, w=1)
     
-
+    #create IK/FK Switch ctrl
+    Switch_CTRL = str(side) + 'IK_FK_Switch_CTRL'
+    CreateStarCTRL(Switch_CTRL, 0.5, [0.3,0.3,0.3], (0,0,1))
+    pm.addAttr(longName='IK_FK_Switch', at = 'double', defaultValue=0.0, minValue=0.0, maxValue=1)
+    pm.setAttr(str(Switch_CTRL) + '.IK_FK_Switch', k = True)
     
+    # move offset GRP to wrist jnt, remove const
+    tempConst = pm.parentConstraint(wrist, str(Switch_CTRL), mo = False, sr= ['x', 'y', 'z'])
+    pm.delete(tempConst)
+    
+    pm.move(str(Switch_CTRL), (0.3,0.6, -1 ),  relative = True)
+    CleanHist(Switch_CTRL)   
     
  
 
 # ======================================================================== # 
-CreateArm(0.5)
+CreateArm('L_', 0.5)
+
+
 

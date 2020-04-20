@@ -78,7 +78,7 @@ def CreateBallCTRL(CTRL_name, rad):
 
     CleanHist(nurbCTRL[0])
     offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
-    pm.parent(nurbCTRL[0], offset_GRP)
+    #pm.parent(nurbCTRL[0], offset_GRP)
     
 # ================================ #
 def CreateTwistJnt(jntRadius, jntName, side, prntJnt, nxtJnt, moveConst, Reparent):
@@ -124,15 +124,26 @@ def CreateIK(jntIKList):
     pole_GRP = str(poleVector_CTRL) + '_offset_GRP'
     CreateBallCTRL(str(poleVector_CTRL), 0.15)
     
-    
-    print pole_GRP
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(jntIKList[1], str(pole_GRP), sr = ['x', 'y', 'z'])
     pm.delete(tempConst)
+    CleanHist(pole_GRP)    
     
-    pm.move(str(pole_GRP), (0,0,-1), relative= True)
-    CleanHist(pole_GRP)
-
+    # point + aim constraint CTRL to prevent joint from moving after pole V Constr
+    pointConst = pm.pointConstraint( str(jntIKList[0]), str(jntIKList[2]), str(poleVector_CTRL), mo= False, w=1 )
+    pm.delete(pointConst)
+    
+    aimConst = pm.aimConstraint( str(jntIKList[1]), str(poleVector_CTRL), mo= False, w=1 )
+    pm.delete(aimConst)
+    
+    # constrain PV
+    PVConstr = pm.poleVectorConstraint(poleVector_CTRL, arm_ik[0], n = str(poleVector_CTRL) + '_constraint')
+    pm.move(str(poleVector_CTRL), (1,0, 0 ), os = True, wd = False, relative = True)
+    
+    CleanHist(poleVector_CTRL)   
+    pm.parent(poleVector_CTRL, pole_GRP) 
+    
+    
 # ================================ # 
 def IK_FKChain(jnList):
     

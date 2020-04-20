@@ -13,6 +13,12 @@ FKJntList = []
 del FKJntList[:]
 
 # ================================ #
+def CleanHist(obj):
+    pm.delete(obj , ch = 1)
+    pm.makeIdentity(obj, apply = True )
+    
+
+# ================================ #
 def Distance(objA, objB): 
     vecA = cmds.xform(str(objA), q=True, t=True, ws=True)
     vecB = cmds.xform(str(objB), q=True, t=True, ws=True)
@@ -34,8 +40,46 @@ def CreateStarCTRL(CTRL_name, rad):
     
     offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
     pm.parent(nurbCTRL[0], offset_GRP)
-    
 
+# ================================ #
+def ReparentShape(nurbCTRL, parentCTRL):
+    ctrlName = str(nurbCTRL[0])
+    print ctrlName
+    shapes = pm.listRelatives(ctrlName)
+    shape = shapes[0]
+    
+    print shape
+    pm.parent(shape,parentCTRL[0], relative = True, shape= True)
+    pm.delete(ctrlName)
+    
+# ================================ #    
+def CreateBallCTRL(CTRL_name, rad):
+    
+    nurbCTRL = cmds.circle( n = str(CTRL_name), nr =(1,0,0), c=(0, 0, 0), r= rad )
+    nurbCTRL1 = cmds.circle( n = str('circle1'), nr =(0,0,1), c=(0, 0, 0), r= rad )
+    nurbCTRL2 = cmds.circle( n = str('circle2'), nr =(0,1,0), c=(0, 0, 0), r= rad )
+
+    nurbCTRL3 = cmds.circle( n = str('circle3'), nr =(1,0,0), c=(0, 0, 0), r= rad )
+    pm.rotate(nurbCTRL3, [0,0,45])
+
+    nurbCTRL4 = cmds.circle( n = str('circle4'), nr =(1,0,0), c=(0, 0, 0), r= rad )
+    pm.rotate(nurbCTRL4, [0,0,-45])
+
+    CleanHist(nurbCTRL[0])
+    CleanHist(nurbCTRL1[0])
+    CleanHist(nurbCTRL2[0])
+    CleanHist(nurbCTRL3[0])
+    CleanHist(nurbCTRL4[0])
+
+    ReparentShape(nurbCTRL4, nurbCTRL)
+    ReparentShape(nurbCTRL3, nurbCTRL)
+    ReparentShape(nurbCTRL2, nurbCTRL)    
+    ReparentShape(nurbCTRL1, nurbCTRL)    
+
+    CleanHist(nurbCTRL[0])
+    offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
+    pm.parent(nurbCTRL[0], offset_GRP)
+    
 # ================================ #
 def CreateTwistJnt(jntRadius, jntName, side, prntJnt, nxtJnt, moveConst, Reparent):
     
@@ -62,17 +106,32 @@ def CreateIK(jntIKList):
     
     side = str(jntIKList[0][0:2])
     
-    CTRL_name = str(side) + "arm_IK_CTRL"
-    CreateStarCTRL(CTRL_name, 0.6)
+    # create arm CTRL
+    Arm_CTRL = str(side) + "arm_IK_CTRL"
+    CreateStarCTRL(Arm_CTRL, 0.6)
     
     # move offset GRP to wrist jnt, remove const
-    tempConst = pm.parentConstraint(jntIKList[2], str(CTRL_name) + '_offset_GRP')
+    tempConst = pm.parentConstraint(jntIKList[2], str(Arm_CTRL) + '_offset_GRP')
     pm.delete(tempConst)
 
     # create IK handle 
     arm_ik = pm.ikHandle( n = str(side) + 'IK_Handle', sj=jntIKList[0], ee=jntIKList[2])
-    pm.parent(arm_ik[0],CTRL_name)
+    pm.parent(arm_ik[0],Arm_CTRL)
     
+    
+    # create pole vector CTRL
+    poleVector_CTRL = str(side) + 'pole_vector'
+    pole_GRP = str(poleVector_CTRL) + '_offset_GRP'
+    CreateBallCTRL(str(poleVector_CTRL), 0.15)
+    
+    
+    print pole_GRP
+    # move offset GRP to wrist jnt, remove const
+    tempConst = pm.parentConstraint(jntIKList[1], str(pole_GRP), sr = ['x', 'y', 'z'])
+    pm.delete(tempConst)
+    
+    pm.move(str(pole_GRP), (0,0,-1), relative= True)
+    CleanHist(pole_GRP)
 
 # ================================ # 
 def IK_FKChain(jnList):

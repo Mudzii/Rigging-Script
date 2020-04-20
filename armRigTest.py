@@ -17,14 +17,13 @@ def CleanHist(obj):
     pm.delete(obj , ch = 1)
     pm.makeIdentity(obj, apply = True )
     
-
 # ================================ #
 def Distance(objA, objB): 
     vecA = cmds.xform(str(objA), q=True, t=True, ws=True)
     vecB = cmds.xform(str(objB), q=True, t=True, ws=True)
 	
     return sqrt(pow(vecA[0]-vecB[0],2)+pow(vecA[1]-vecB[1],2)+pow(vecA[2]-vecB[2],2))
-
+    
 # ================================ #
 def RecolourCtrl(CTRL_name):
     
@@ -37,25 +36,7 @@ def RecolourCtrl(CTRL_name):
         pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 0, 0, 1)       
     else: 
         pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 1, 1, 0) 
-
-# ================================ # 
-def CreateStarCTRL(CTRL_name, rad):
-    nurbCTRL = cmds.circle( n = str(CTRL_name), nr =(1,0,0), c=(0, 0, 0), r= rad )
-    
-    curveCVs = cmds.ls('{0}.cv[:]'.format(CTRL_name), fl = True)
-    selList = [curveCVs[0], curveCVs[2], curveCVs[4], curveCVs[6]]
-    
-    sel = pm.select(selList)
-    pm.scale(sel, [0.5, 0.5, 0.5])
-    
-    pm.delete(nurbCTRL[0] , ch = 1)
-    pm.makeIdentity(nurbCTRL[0], apply = True )
-    
-    offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
-    pm.parent(nurbCTRL[0], offset_GRP)
-    
-    RecolourCtrl(CTRL_name)
-
+        
 # ================================ #
 def ReparentShape(nurbCTRL, parentCTRL):
     ctrlName = str(nurbCTRL[0])
@@ -66,6 +47,24 @@ def ReparentShape(nurbCTRL, parentCTRL):
     pm.parent(shape,parentCTRL[0], relative = True, shape= True)
     pm.delete(ctrlName)
     
+# ================================ # 
+def CreateStarCTRL(CTRL_name, rad):
+    
+    nurbCTRL = cmds.circle( n = str(CTRL_name), nr =(1,0,0), c=(0, 0, 0), r= rad )
+    
+    curveCVs = cmds.ls('{0}.cv[:]'.format(CTRL_name), fl = True)
+    selList = [curveCVs[0], curveCVs[2], curveCVs[4], curveCVs[6]]
+    
+    sel = pm.select(selList)
+    pm.scale(sel, [0.5, 0.5, 0.5])
+    
+    CleanHist(nurbCTRL[0])
+    
+    offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
+    pm.parent(nurbCTRL[0], offset_GRP)
+    
+    RecolourCtrl(CTRL_name)
+ 
 # ================================ #    
 def CreateBallCTRL(CTRL_name, rad):
     
@@ -96,6 +95,27 @@ def CreateBallCTRL(CTRL_name, rad):
     
     RecolourCtrl(CTRL_name)
     
+# ================================ #   
+def CreateCircleCTRL(CTRL_name, prntJnt, norm, rad, offset):
+    
+    CTRL = cmds.circle( n = str(CTRL_name), nr = norm, c=(0, 0, 0), r= rad )
+    offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
+    pm.parent(CTRL[0], offset_GRP) 
+    
+    CleanHist(CTRL[0])
+    CleanHist(offset_GRP)
+    
+    tempConst = pm.parentConstraint(prntJnt, str(offset_GRP), mo = False)
+    pm.delete(tempConst)
+    
+    curveCVs = cmds.ls('{0}.cv[:]'.format(CTRL[0]), fl = True)
+    pm.rotate(curveCVs, offset)
+    
+    pm.parentConstraint(str(CTRL_name), str(prntJnt), mo= False, w=1)
+    
+    RecolourCtrl(CTRL_name)
+    
+        
 # ================================ #
 def CreateTwistJnt(jntRadius, jntName, side, prntJnt, nxtJnt, moveConst, Reparent):
     
@@ -160,6 +180,27 @@ def CreateIK(jntIKList):
     pm.parent(poleVector_CTRL, pole_GRP) 
     
     
+    
+# ================================ # 
+def CreateFK(jntFKList):
+
+    side = str(jntFKList[0][0:2])
+    
+    # shoulder CTRL
+    shoulder_CTR_Name = str(side) + 'shoulder_CTRL'  
+    CreateCircleCTRL(str(shoulder_CTR_Name), jntFKList[0], (0,1,0), 0.6, (0,0,-100))
+    
+    # elbow CTRL
+    elbow_CTR_Name = str(side) + 'elbow_CTRL'  
+    CreateCircleCTRL(str(elbow_CTR_Name), jntFKList[1], (0,1,0), 0.5, (0,0,-100))
+    
+    # wrist CTRL
+    wrist_CTR_Name = str(side) + 'wrist_CTRL'  
+    CreateCircleCTRL(str(wrist_CTR_Name), jntFKList[2], (0,1,0), 0.3, (0,0,-100))
+    
+    pm.parent(str(wrist_CTR_Name) + '_offset_GRP', elbow_CTR_Name)
+    pm.parent(str(elbow_CTR_Name) + '_offset_GRP', shoulder_CTR_Name)
+    
 # ================================ # 
 def IK_FKChain(jnList):
     
@@ -195,6 +236,7 @@ def IK_FKChain(jnList):
     
     # create IK chain
     CreateIK(IKJntList)    
+    CreateFK(FKJntList)
     
     
 # ================================ # 
@@ -237,18 +279,3 @@ def CreateArm(jntRadius):
 
 
 CreateArm(0.5)
-
-"""
-print "____________________________________"    
-for x in IKJntList:
-    print x
-
-print "____" 
-for x in FKJntList:
-    print x
-
-print "____________________________________"    
-for x in jntList:
-    print x
-
-"""

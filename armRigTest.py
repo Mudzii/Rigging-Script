@@ -6,14 +6,14 @@ import maya.cmds as cmds
 # ================================ #
 # ================================ #
 
-jntList = []
-del jntList[:]
+#jntList = []
+#del jntList[:]
 
-IKJntList = []
-del IKJntList[:]
+#IKJntList = []
+#del IKJntList[:]
 
-FKJntList = []
-del FKJntList[:]
+#FKJntList = []
+#del FKJntList[:]
 
 # ================================ #
 def CleanHist(obj):
@@ -134,7 +134,7 @@ def CreateCircleCTRL(CTRL_name, prntJnt, norm, rad, offset):
     
         
 # ================================ #
-def CreateTwistJnt(jntRadius, jntName, side, prntJnt, nxtJnt, moveConst, Reparent):
+def CreateTwistJnt(jntList, jntRadius, jntName, side, prntJnt, nxtJnt, moveConst, Reparent):
     
     twistJnt = cmds.duplicate(str(prntJnt), n= str(side) + str(jntName), parentOnly=True)[0]
     pm.joint(twistJnt, e=True, rad = jntRadius)
@@ -224,11 +224,8 @@ def CreateFK(jntFKList):
         RecolourObj(x)
             
 # ================================ # 
-def IK_FKChain(jnList):
-    
-    global FKJntList
-    global IKJntList
-    
+
+def IK_FKChain(jnList, IKJntList, FKJntList):
     
     
     # create IK jnt chain
@@ -265,7 +262,6 @@ def IK_FKChain(jnList):
 # ================================ # 
 def ConnectIKFKConstr(utilNode, Constr, side, jnt, Switch_CTRL):
     
-    
     constrAttr = pm.listAttr( str(Constr), st= str(side) + str(jnt) + '*')   
 
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(Constr) + '.' + str(constrAttr[1]), force = True)
@@ -275,11 +271,9 @@ def ConnectIKFKConstr(utilNode, Constr, side, jnt, Switch_CTRL):
   
 # ================================ # 
 
-def CreateArm(side, jntRadius):
-    
-    global jntIKList
-    global jntFKList
-    
+def CreateArm(jntList, IKJntList, FKJntList, side, jntRadius):
+
+
     # create simple arm jnts
     clavicle = pm.joint(n = str(side) + 'clavicle_jnt', p = (1,0,0), rad = jntRadius) 
     shoulder = pm.joint(n = str(side) + 'shoulder_jnt', p = (2,0.3,0.4), rad = jntRadius) 
@@ -300,18 +294,21 @@ def CreateArm(side, jntRadius):
     jntList.append(elbow)
     jntList.append(wrist)
     
+
     # create IK FK jnts
-    IK_FKChain(jntList)
-       
+    IK_FKChain(jntList, IKJntList, FKJntList)   
+    IKJntList = IKJntList[::-1]
+    FKJntList = FKJntList[::-1]
+
     # create twist joints    
-    #twistJntRadius = jntRadius + 0.5
-    #CreateTwistJnt(twistJntRadius, 'shoulder_twist_jnt', side, shoulder, 'none', False, True)
+    twistJntRadius = jntRadius + 0.1
+    #CreateTwistJnt(jntList, twistJntRadius, 'shoulder_twist_jnt', side, shoulder, 'none', False, True)
     #CreateTwistJnt(twistJntRadius, 'bicep_twist_jnt', side, shoulder, elbow, True, True)
     #CreateTwistJnt(twistJntRadius, 'elbow_upper_twist_jnt', side, elbow, shoulder, False, False)
     #CreateTwistJnt(twistJntRadius, 'elbow_twist_jnt', side, elbow, 'none', False, True)
     #CreateTwistJnt(twistJntRadius, 'radius_twist_jnt', side, elbow, wrist, True, True)
     #CreateTwistJnt(twistJntRadius, 'wrist_twist_jnt', side, wrist, elbow, False, False)
-    
+             
     # constrain jnts to IK and FK jnts 
     shoulderConstr = pm.parentConstraint(FKJntList[0], IKJntList[0], str(shoulder), mo = False, w=1)
     elbowConstr = pm.parentConstraint(FKJntList[1], IKJntList[1], str(elbow), mo = False, w=1)
@@ -322,11 +319,11 @@ def CreateArm(side, jntRadius):
     CreateStarCTRL(Switch_CTRL, 0.5, [0.3,0.3,0.3], (0,0,1))
     pm.addAttr(longName='IK_FK_Switch', at = 'double', defaultValue=0.0, minValue=0.0, maxValue=1)
     pm.setAttr(str(Switch_CTRL) + '.IK_FK_Switch', k = True)
-    
+
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(wrist, str(Switch_CTRL), mo = False, sr= ['x', 'y', 'z'])
     pm.delete(tempConst)
-    
+   
     pm.move(str(Switch_CTRL), (0.3,0.6, -1 ),  relative = True)
     CleanHist(Switch_CTRL)
     
@@ -338,15 +335,27 @@ def CreateArm(side, jntRadius):
     ConnectIKFKConstr(revUtility, elbowConstr, side, 'elbow', Switch_CTRL)
     ConnectIKFKConstr(revUtility, wristConstr, side, 'wrist', Switch_CTRL)
     
- 
+
     pm.orientConstraint(str(side) + 'arm_IK_CTRL', IKJntList[2], mo = False)
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(side) + 'arm_IK_CTRL_offset_GRP.visibility', force = True)
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(side) + 'pole_vector_offset_GRP.visibility', force = True)
     pm.connectAttr(str(revUtility) + '.outputX', str(side) + 'shoulder_FK_CTRL_offset_GRP.visibility', force = True)
     
+    IK_GRP = pm.group( em=True, name= str(side) + 'IK_GRP' )
+    pm.parent(str(IKJntList[0]) , IK_GRP)
+  
+    
+    FK_GRP = pm.group( em=True, name= str(side) + 'FK_GRP' )
+    pm.parent(str(FKJntList[0]) , FK_GRP)
+ 
+    
 
 # ======================================================================== # 
-CreateArm('L_', 0.5)
+
+jointList = []
+IKjointList = []
+FKjointList = []
+CreateArm(jointList, IKjointList, FKjointList, 'L_', 0.1)
 
 
 

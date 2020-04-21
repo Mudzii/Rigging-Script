@@ -1,6 +1,10 @@
+# ================================ #
+# ================================ #
 from math import pow,sqrt
 import pymel.core as pm
 import maya.cmds as cmds
+# ================================ #
+# ================================ #
 
 jntList = []
 del jntList[:]
@@ -24,17 +28,31 @@ def Distance(objA, objB):
     return sqrt(pow(vecA[0]-vecB[0],2)+pow(vecA[1]-vecB[1],2)+pow(vecA[2]-vecB[2],2))
     
 # ================================ #
-def RecolourCtrl(CTRL_name):
+def RecolourObj(obj):
     
-    pm.setAttr(str(CTRL_name) + '.overrideEnabled', 1)
-    pm.setAttr(str(CTRL_name) + '.overrideRGBColors', 1)
+    pm.setAttr(str(obj) + '.overrideEnabled', 1)
+    pm.setAttr(str(obj) + '.overrideRGBColors', 1)
     
-    if CTRL_name[0] == 'L':
-        pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 1, 0, 0)
-    elif CTRL_name[0] == 'R':
-        pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 0, 0, 1)       
-    else: 
-        pm.setAttr(str(CTRL_name) + '.overrideColorRGB', 1, 1, 0) 
+    rel = pm.listRelatives(obj)
+    
+    # if IK/FK joint
+    if pm.objectType( str(obj), isType= 'joint' ):
+        if obj[-2] == 'I':
+            pm.setAttr(str(obj) + '.overrideColorRGB', 0, 1, 0)
+            
+        elif obj[-2] == 'F':
+            pm.setAttr(str(obj) + '.overrideColorRGB', 1, 0, 1)       
+    
+    # if CTRL
+    elif pm.objectType( str(rel[0]), isType= 'nurbsCurve' ):
+        if obj[0] == 'L':
+            pm.setAttr(str(obj) + '.overrideColorRGB', 1, 0, 0)
+        elif obj[0] == 'R':
+            pm.setAttr(str(obj) + '.overrideColorRGB', 0, 0, 1)       
+        else: 
+            pm.setAttr(str(obj) + '.overrideColorRGB', 1, 1, 0) 
+            
+    
         
 # ================================ #
 def ReparentShape(nurbCTRL, parentCTRL):
@@ -62,7 +80,7 @@ def CreateStarCTRL(CTRL_name, rad, scle, norm):
     offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
     pm.parent(nurbCTRL[0], offset_GRP)
     
-    RecolourCtrl(CTRL_name)
+    RecolourObj(CTRL_name)
  
 # ================================ #    
 def CreateBallCTRL(CTRL_name, rad):
@@ -92,7 +110,7 @@ def CreateBallCTRL(CTRL_name, rad):
     offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
     #pm.parent(nurbCTRL[0], offset_GRP)
     
-    RecolourCtrl(CTRL_name)
+    RecolourObj(CTRL_name)
     
 # ================================ #   
 def CreateCircleCTRL(CTRL_name, prntJnt, norm, rad, offset):
@@ -112,7 +130,7 @@ def CreateCircleCTRL(CTRL_name, prntJnt, norm, rad, offset):
     
     pm.parentConstraint(str(CTRL_name), str(prntJnt), mo= False, w=1)
     
-    RecolourCtrl(CTRL_name)
+    RecolourObj(CTRL_name)
     
         
 # ================================ #
@@ -178,6 +196,8 @@ def CreateIK(jntIKList):
     CleanHist(poleVector_CTRL)   
     pm.parent(poleVector_CTRL, pole_GRP) 
     
+    for x in jntIKList:
+        RecolourObj(x)
     
     
 # ================================ # 
@@ -200,6 +220,9 @@ def CreateFK(jntFKList):
     pm.parent(str(wrist_CTR_Name) + '_offset_GRP', elbow_CTR_Name)
     pm.parent(str(elbow_CTR_Name) + '_offset_GRP', shoulder_CTR_Name)
     
+    for x in jntFKList:
+        RecolourObj(x)
+            
 # ================================ # 
 def IK_FKChain(jnList):
     
@@ -244,8 +267,7 @@ def ConnectIKFKConstr(utilNode, Constr, side, jnt, Switch_CTRL):
     
     
     constrAttr = pm.listAttr( str(Constr), st= str(side) + str(jnt) + '*')   
-    
-    print str(Constr) + '.' + str(constrAttr[1])
+
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(Constr) + '.' + str(constrAttr[1]), force = True)
     pm.connectAttr(str(utilNode) + '.outputX', str(Constr) + '.' + str(constrAttr[0]), force = True)
     

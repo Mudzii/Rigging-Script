@@ -186,15 +186,15 @@ def CreateFK(jntFKList):
     side = str(jntFKList[0][0:2])
     
     # shoulder CTRL
-    shoulder_CTR_Name = str(side) + 'shoulder_CTRL'  
+    shoulder_CTR_Name = str(side) + 'shoulder_FK_CTRL'  
     CreateCircleCTRL(str(shoulder_CTR_Name), jntFKList[0], (0,1,0), 0.6, (0,0,-100))
     
     # elbow CTRL
-    elbow_CTR_Name = str(side) + 'elbow_CTRL'  
+    elbow_CTR_Name = str(side) + 'elbow_FK_CTRL'  
     CreateCircleCTRL(str(elbow_CTR_Name), jntFKList[1], (0,1,0), 0.5, (0,0,-100))
     
     # wrist CTRL
-    wrist_CTR_Name = str(side) + 'wrist_CTRL'  
+    wrist_CTR_Name = str(side) + 'wrist_FK_CTRL'  
     CreateCircleCTRL(str(wrist_CTR_Name), jntFKList[2], (0,1,0), 0.3, (0,0,-100))
     
     pm.parent(str(wrist_CTR_Name) + '_offset_GRP', elbow_CTR_Name)
@@ -205,6 +205,8 @@ def IK_FKChain(jnList):
     
     global FKJntList
     global IKJntList
+    
+    
     
     # create IK jnt chain
     IKChain = cmds.duplicate(str(jnList[1]), n= str(jnList[1] + '_IK'))[0]
@@ -237,7 +239,18 @@ def IK_FKChain(jnList):
     CreateIK(IKJntList)    
     CreateFK(FKJntList)
     
+# ================================ # 
+def ConnectIKFKConstr(utilNode, Constr, side, jnt, Switch_CTRL):
     
+    
+    constrAttr = pm.listAttr( str(Constr), st= str(side) + str(jnt) + '*')   
+    
+    print str(Constr) + '.' + str(constrAttr[1])
+    pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(Constr) + '.' + str(constrAttr[1]), force = True)
+    pm.connectAttr(str(utilNode) + '.outputX', str(Constr) + '.' + str(constrAttr[0]), force = True)
+    
+    
+  
 # ================================ # 
 
 def CreateArm(side, jntRadius):
@@ -269,13 +282,13 @@ def CreateArm(side, jntRadius):
     IK_FKChain(jntList)
        
     # create twist joints    
-    twistJntRadius = jntRadius + 0.5
-    CreateTwistJnt(twistJntRadius, 'shoulder_twist_jnt', side, shoulder, 'none', False, True)
-    CreateTwistJnt(twistJntRadius, 'bicep_twist_jnt', side, shoulder, elbow, True, True)
-    CreateTwistJnt(twistJntRadius, 'elbow_upper_twist_jnt', side, elbow, shoulder, False, False)
-    CreateTwistJnt(twistJntRadius, 'elbow_twist_jnt', side, elbow, 'none', False, True)
-    CreateTwistJnt(twistJntRadius, 'radius_twist_jnt', side, elbow, wrist, True, True)
-    CreateTwistJnt(twistJntRadius, 'wrist_twist_jnt', side, wrist, elbow, False, False)
+    #twistJntRadius = jntRadius + 0.5
+    #CreateTwistJnt(twistJntRadius, 'shoulder_twist_jnt', side, shoulder, 'none', False, True)
+    #CreateTwistJnt(twistJntRadius, 'bicep_twist_jnt', side, shoulder, elbow, True, True)
+    #CreateTwistJnt(twistJntRadius, 'elbow_upper_twist_jnt', side, elbow, shoulder, False, False)
+    #CreateTwistJnt(twistJntRadius, 'elbow_twist_jnt', side, elbow, 'none', False, True)
+    #CreateTwistJnt(twistJntRadius, 'radius_twist_jnt', side, elbow, wrist, True, True)
+    #CreateTwistJnt(twistJntRadius, 'wrist_twist_jnt', side, wrist, elbow, False, False)
     
     # constrain jnts to IK and FK jnts 
     shoulderConstr = pm.parentConstraint(FKJntList[0], IKJntList[0], str(shoulder), mo = False, w=1)
@@ -293,9 +306,22 @@ def CreateArm(side, jntRadius):
     pm.delete(tempConst)
     
     pm.move(str(Switch_CTRL), (0.3,0.6, -1 ),  relative = True)
-    CleanHist(Switch_CTRL)   
+    CleanHist(Switch_CTRL)
+    
+    # connect IK FK with constraints
+    revUtility = pm.shadingNode('reverse', n= str(side) + 'arm_IK_FK_reverse_node', asUtility=True)
+    pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(revUtility) + '.inputX', force = True)
+    
+    ConnectIKFKConstr(revUtility, shoulderConstr, side, 'shoulder', Switch_CTRL)
+    ConnectIKFKConstr(revUtility, elbowConstr, side, 'elbow', Switch_CTRL)
+    ConnectIKFKConstr(revUtility, wristConstr, side, 'wrist', Switch_CTRL)
     
  
+    pm.orientConstraint(str(side) + 'arm_IK_CTRL', IKJntList[2], mo = False)
+    pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(side) + 'arm_IK_CTRL_offset_GRP.visibility', force = True)
+    pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(side) + 'pole_vector_offset_GRP.visibility', force = True)
+    pm.connectAttr(str(revUtility) + '.outputX', str(side) + 'shoulder_FK_CTRL_offset_GRP.visibility', force = True)
+    
 
 # ======================================================================== # 
 CreateArm('L_', 0.5)

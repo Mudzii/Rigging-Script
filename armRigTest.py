@@ -277,21 +277,36 @@ def CreateFinger(side, prefix, jntList, wristJnt, wristPos, finger, pos, jntRadi
     pm.parent(FingerMeta, wristJnt)
     CleanHist(FingerMeta)
     
-    # create rest of jnts
-    Knuckle = pm.joint(n = str(prefix) + str(finger) + '_finger_knuckle_jnt', r = True, p = (side * 0.5, 0,0), rad = jntRadius)
-    Joint1 = pm.joint(n = str(prefix) + str(finger) + '_finder_1_jnt', r = True, p = (side * 0.3,0,0), rad = jntRadius)
-    Joint2 = pm.joint(n = str(prefix) + str(finger) + '_finder_2_jnt', r = True, p = (side * 0.3,0,0), rad = jntRadius)
-    JointEnd = pm.joint(n = str(prefix) + str(finger) + '_finder_End_jnt', r = True, p = (side * 0.3,0,0), rad = jntRadius)
+    if finger is not 'thumb':
+        # create rest of jnts
+        Knuckle = pm.joint(n = str(prefix) + str(finger) + '_finger_knuckle_jnt', r = True, p = (side * 0.5, 0,0), rad = jntRadius)
+        Joint1 = pm.joint(n = str(prefix) + str(finger) + '_finder_1_jnt', r = True, p = (side * 0.2,0,0), rad = jntRadius)
+        Joint2 = pm.joint(n = str(prefix) + str(finger) + '_finder_2_jnt', r = True, p = (side * 0.2,0,0), rad = jntRadius)
+        JointEnd = pm.joint(n = str(prefix) + str(finger) + '_finder_End_jnt', r = True, p = (side * 0.2,0,0), rad = jntRadius)
     
-    # add jnts to list
-    jntList.extend([FingerMeta, Knuckle, Joint1, Joint2, JointEnd]) 
+        # add jnts to list
+        jntList.extend([FingerMeta, Knuckle, Joint1, Joint2, JointEnd]) 
     
-    # set orientations
-    pm.joint(FingerMeta, e=True, zso = True, oj='xyz', sao = 'yup')
-    pm.joint(Knuckle, e=True, zso = True, oj='xyz', sao = 'yup')
-    pm.joint(Joint1, e=True, zso = True, oj='xyz', sao = 'yup')
-    pm.joint(Joint2, e=True, zso = True, oj='xyz', sao = 'yup')
-    pm.joint(JointEnd, e=True, zso = True, oj='xyz', sao = 'yup')
+        # set orientations
+        pm.joint(FingerMeta, e=True, zso = True, oj='xyz', sao = 'yup')
+        pm.joint(Knuckle, e=True, zso = True, oj='xyz', sao = 'yup')
+        pm.joint(Joint1, e=True, zso = True, oj='xyz', sao = 'yup')
+        pm.joint(Joint2, e=True, zso = True, oj='xyz', sao = 'yup')
+        pm.joint(JointEnd, e=True, zso = True, oj='xyz', sao = 'yup')
+        
+    if finger is 'thumb':
+        Knuckle = pm.joint(n = str(prefix) + str(finger) + '_finger_knuckle_jnt', r = True, p = (side * 0.2, 0,(side * 0.25)), rad = jntRadius)
+        Joint1 = pm.joint(n = str(prefix) + str(finger) + '_finder_1_jnt', r = True, p = ((side * 0.15),0,(side * 0.15)), rad = jntRadius)
+        JointEnd = pm.joint(n = str(prefix) + str(finger) + '_finder_End_jnt', r = True, p = ((side * 0.15),0,(side * 0.15)), rad = jntRadius)
+        
+        # add jnts to list
+        jntList.extend([FingerMeta, Knuckle, Joint1, JointEnd]) 
+    
+        # set orientations
+        pm.joint(FingerMeta, e=True, zso = True, oj='xyz', sao = 'yup')
+        pm.joint(Knuckle, e=True, zso = True, oj='xyz', sao = 'yup')
+        pm.joint(Joint1, e=True, zso = True, oj='xyz', sao = 'yup')
+        pm.joint(JointEnd, e=True, oj='none', zso = True)
     
 # ================================ #     
 def CreateHand(side, wristJnt, jntRadius):
@@ -304,12 +319,12 @@ def CreateHand(side, wristJnt, jntRadius):
     
     CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'middle', ((side *0.3), -0.05, 0.1), jntRadius)
     CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'index', ((side * 0.3), -0.06, 0.25), jntRadius)
+    CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'ring', ((side * 0.35), -0.06, -0.05), jntRadius)
+    CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'pinky', ((side * 0.4), -0.09, -0.2), jntRadius)
+      
+    CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'thumb', ((side * 0.15), -0.1, (side * 0.3)), jntRadius)
     
 
-    
-    #pm.select(middleFingerMeta)
-    #metaPos = cmds.xform( query=True, translation=True, worldSpace=True )
-    
   
 # ================================ # 
 def CreateArm(jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):

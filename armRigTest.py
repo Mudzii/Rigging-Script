@@ -476,4 +476,3 @@ skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
 #CreateArm(jointList, IKjointList, FKjointList, CTRLs, 'R_', 0.1)
 #CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'R_', 0.1)
 CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList, IKjointList, FKjointList, CTRLs, 'L_', 0.1)
-

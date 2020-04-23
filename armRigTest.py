@@ -394,17 +394,6 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     CreateStarCTRL(Switch_CTRL, 0.5, [0.3,0.3,0.3], (0,0,1))
     pm.addAttr(longName='IK_FK_Switch', at = 'double', defaultValue=0.0, minValue=0.0, maxValue=1)
     pm.setAttr(str(Switch_CTRL) + '.IK_FK_Switch', k = True)
-    
-    # IK FK switch line
-    Switch_Line = pm.curve( p=[(0, 0, 0), (-0.3,0,0) ,(-0.6, 0, 0),  (-1, 0, 0)], k=[0,0,0,1,1,1] )
-    curvePoints = cmds.ls('{0}.ep[:]'.format(Switch_Line), fl = True)
-    
-    pm.select(wrist)
-    wristPos = cmds.xform( query=True, translation=True, worldSpace=True )
-    
-    pm.move( curvePoints[0], wristPos)
-    
-  
 
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(wrist, str(Switch_CTRL), mo = False, sr= ['x', 'y', 'z'])
@@ -412,7 +401,24 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
    
     pm.move(str(Switch_CTRL), (side * 0.3,0.6, -1 ),  relative = True)
     CleanHist(Switch_CTRL)
-   
+    
+
+    # IK FK switch line
+    Switch_Line = pm.curve(n = str(prefix) + 'IK_FK_VIS',d=1, p=[(0, 0, 0),(-1, 0, 0)], k=[0,1] )
+    curvePoints = cmds.ls('{0}.cv[:]'.format(Switch_Line), fl = True)
+    
+    pm.select(wrist)
+    wristPos = cmds.xform( query=True, translation=True, worldSpace=True )
+    
+    pm.select(Switch_CTRL)
+    CTRL_Pos = cmds.xform( query=True, translation=True, worldSpace=True )
+    
+    pm.move( curvePoints[1], wristPos)
+    pm.move( curvePoints[0], ((side * 5.07),-0.11,-0.6))  
+    CleanHist(Switch_Line)
+    
+    pm.parent(Switch_Line, str(Switch_CTRL) + '_offset_GRP')
+     
     # connect IK FK with constraints
     revUtility = pm.shadingNode('reverse', n= str(prefix) + 'arm_IK_FK_reverse_node', asUtility=True)
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(revUtility) + '.inputX', force = True)
@@ -448,7 +454,6 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     pm.parent(CTRLs[1], ctrl_GRP)
     pm.parent(CTRLs[2], ctrl_GRP)
     pm.parent(CTRLs[5], ctrl_GRP)
-    
 
 
 # ======================================================================== # 

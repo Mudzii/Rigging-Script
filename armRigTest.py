@@ -155,7 +155,7 @@ def CreateTwistJnt(jntList, jntRadius, jntName, prefix, prntJnt, nxtJnt, moveCon
 
 
 # ================================ # 
-def CreateIK(jntIKList):
+def CreateIK(jntIKList, ctrl_GRP):
     
     prefix = str(jntIKList[0][0:2])
     
@@ -198,10 +198,11 @@ def CreateIK(jntIKList):
     
     for x in jntIKList:
         RecolourObj(x)
-    
+
+    ctrl_GRP.extend([str(Arm_CTRL) + '_offset_GRP', pole_GRP])
     
 # ================================ # 
-def CreateFK(jntFKList):
+def CreateFK(jntFKList,ctrl_GRP):
 
     prefix = str(jntFKList[0][0:2])
     
@@ -222,10 +223,12 @@ def CreateFK(jntFKList):
     
     for x in jntFKList:
         RecolourObj(x)
+        
+    ctrl_GRP.extend([str(shoulder_CTR_Name) + '_offset_GRP' ,str(wrist_CTR_Name) + '_offset_GRP', str(elbow_CTR_Name) + '_offset_GRP'])
             
 # ================================ # 
 
-def IK_FKChain(jnList, IKJntList, FKJntList):
+def IK_FKChain(jnList, IKJntList, FKJntList, ctrl_GRP):
     
     
     # create IK jnt chain
@@ -256,8 +259,8 @@ def IK_FKChain(jnList, IKJntList, FKJntList):
     FKJntList = FKJntList[::-1]
     
     # create IK chain
-    CreateIK(IKJntList)    
-    CreateFK(FKJntList)
+    CreateIK(IKJntList,ctrl_GRP)    
+    CreateFK(FKJntList,ctrl_GRP)
     
 # ================================ # 
 def ConnectIKFKConstr(utilNode, Constr, prefix, jnt, Switch_CTRL):
@@ -324,10 +327,10 @@ def CreateHand(side, wristJnt, jntRadius):
       
     CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'thumb', ((side * 0.15), -0.1, (side * 0.3)), jntRadius)
     
-
+    return handJntList
   
 # ================================ # 
-def CreateArm(jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
+def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
     
     side = 1
     if prefix == 'R_':
@@ -351,14 +354,15 @@ def CreateArm(jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
     # add jnts to list & create IK FK jnts    
     jntList.extend([clavicle, shoulder, elbow, wrist])
     
-    CreateHand(side, wrist, jntRadius)
-    
-    
-    """
     # create IK FK jnts
-    IK_FKChain(jntList, IKJntList, FKJntList)   
+    IK_FKChain(jntList, IKJntList, FKJntList, CTRLs)   
     IKJntList = IKJntList[::-1]
     FKJntList = FKJntList[::-1]
+    
+    # create hand
+    handJntList = CreateHand(side, wrist, jntRadius)
+    jntList.extend(handJntList)
+    
 
     # create twist joints    
     twistJntRadius = jntRadius + 0.1
@@ -386,7 +390,7 @@ def CreateArm(jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
    
     pm.move(str(Switch_CTRL), (side * 0.3,0.6, -1 ),  relative = True)
     CleanHist(Switch_CTRL)
-    
+   
     # connect IK FK with constraints
     revUtility = pm.shadingNode('reverse', n= str(prefix) + 'arm_IK_FK_reverse_node', asUtility=True)
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(revUtility) + '.inputX', force = True)
@@ -401,14 +405,29 @@ def CreateArm(jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(prefix) + 'pole_vector_offset_GRP.visibility', force = True)
     pm.connectAttr(str(revUtility) + '.outputX', str(prefix) + 'shoulder_FK_CTRL_offset_GRP.visibility', force = True)
     
+    #create grps for IK FK jnts
     IK_GRP = pm.group( em=True, name= str(prefix) + 'IK_GRP' )
     pm.parent(str(IKJntList[0]) , IK_GRP)
-  
-    
+   
     FK_GRP = pm.group( em=True, name= str(prefix) + 'FK_GRP' )
     pm.parent(str(FKJntList[0]) , FK_GRP)
-    """
     
+    
+    arm_GRP = pm.group( em=True, name= str(prefix) + 'arm_GRP' )
+    pm.parent(FK_GRP, arm_GRP)
+    pm.parent(IK_GRP, arm_GRP)
+    
+    # tidy up
+    CTRLs.append(str(Switch_CTRL) + '_offset_GRP')
+    pm.parent(arm_GRP, rigging_GRP)
+    pm.parent(jntList[0], skeleton_GRP)
+    
+    pm.parent(CTRLs[0], ctrl_GRP)
+    pm.parent(CTRLs[1], ctrl_GRP)
+    pm.parent(CTRLs[2], ctrl_GRP)
+    pm.parent(CTRLs[5], ctrl_GRP)
+    
+
 
 # ======================================================================== # 
 
@@ -423,8 +442,11 @@ IKjointList2 = []
 FKjointList2 = []
 CTRLs2 = []
 
+rigging_GRP = pm.group( em=True, name= 'rigging_GRP' )
+ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
+skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
 
 #CreateArm(jointList, IKjointList, FKjointList, CTRLs, 'R_', 0.1)
-CreateArm(jointList2, IKjointList2, FKjointList2, CTRLs2, 'L_', 0.1)
-#rigging_GRP = pm.group( em=True, name= 'rigg_GRP' )
+CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'L_', 0.1)
+
 

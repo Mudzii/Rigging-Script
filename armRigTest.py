@@ -273,19 +273,38 @@ def ConnectIKFKConstr(utilNode, Constr, prefix, jnt, Switch_CTRL):
 # ================================ #    
 def CreateFinger(side, prefix, jntList, wristJnt, wristPos, finger, pos, jntRadius):
     
+    newPos = [0,0,0] 
+    if prefix == 'R_':
+        newPos[0] = -0.2
+        newPos[1] = -0.1
+        newPos[2] = pos[2] * -1
+        
+    else:  
+        newPos[0] = 0.2
+        newPos[1] = 0.1
+        newPos[2] = pos[2]  
+    
     # create metacarpal jnt
     FingerMeta = pm.joint(n = str(prefix) + str(finger) + '_finder_metacarpal_jnt', p = (0,0,0), rad = jntRadius)  
     pm.parent(FingerMeta, world = True)
-    pm.move(FingerMeta, (wristPos[0] + pos[0], wristPos[1] + pos[1], wristPos[2] + pos[2]))
+
+    pm.move(FingerMeta, (wristPos[0] + pos[0], wristPos[1] + pos[1], wristPos[2] + newPos[2]))
+        
     pm.parent(FingerMeta, wristJnt)
     CleanHist(FingerMeta)
     
+    print '____'
+    print finger
+    print pos 
+    print side 
+
+    
     if finger is not 'thumb':
         # create rest of jnts
-        Knuckle = pm.joint(n = str(prefix) + str(finger) + '_finger_knuckle_jnt', r = True, p = (side * 0.5, 0,0), rad = jntRadius)
-        Joint1 = pm.joint(n = str(prefix) + str(finger) + '_finder_1_jnt', r = True, p = (side * 0.2,0,0), rad = jntRadius)
-        Joint2 = pm.joint(n = str(prefix) + str(finger) + '_finder_2_jnt', r = True, p = (side * 0.2,0,0), rad = jntRadius)
-        JointEnd = pm.joint(n = str(prefix) + str(finger) + '_finder_End_jnt', r = True, p = (side * 0.2,0,0), rad = jntRadius)
+        Knuckle = pm.joint(n = str(prefix) + str(finger) + '_finger_knuckle_jnt', r = True, p = (side * newPos[0] + (-1 * -0.2), 0,0), rad = jntRadius)
+        Joint1 = pm.joint(n = str(prefix) + str(finger) + '_finder_1_jnt', r = True, p = ((side * newPos[0]),0,0), rad = jntRadius)
+        Joint2 = pm.joint(n = str(prefix) + str(finger) + '_finder_2_jnt', r = True, p = (side * newPos[0],0,0), rad = jntRadius)
+        JointEnd = pm.joint(n = str(prefix) + str(finger) + '_finder_End_jnt', r = True, p = (side * newPos[0],0,0), rad = jntRadius)
     
         # add jnts to list
         jntList.extend([FingerMeta, Knuckle, Joint1, Joint2, JointEnd]) 
@@ -298,9 +317,9 @@ def CreateFinger(side, prefix, jntList, wristJnt, wristPos, finger, pos, jntRadi
         pm.joint(JointEnd, e=True, zso = True, oj='xyz', sao = 'yup')
         
     if finger is 'thumb':
-        Knuckle = pm.joint(n = str(prefix) + str(finger) + '_finger_knuckle_jnt', r = True, p = (side * 0.2, 0,(side * 0.25)), rad = jntRadius)
-        Joint1 = pm.joint(n = str(prefix) + str(finger) + '_finder_1_jnt', r = True, p = ((side * 0.15),0,(side * 0.15)), rad = jntRadius)
-        JointEnd = pm.joint(n = str(prefix) + str(finger) + '_finder_End_jnt', r = True, p = ((side * 0.15),0,(side * 0.15)), rad = jntRadius)
+        Knuckle = pm.joint(n = str(prefix) + str(finger) + '_finger_knuckle_jnt', r = True, p = (side * newPos[0], 0,(side * 0.25)), rad = jntRadius)
+        Joint1 = pm.joint(n = str(prefix) + str(finger) + '_finder_1_jnt', r = True, p = ((side * newPos[1]),0,(side * 0.15)), rad = jntRadius)
+        JointEnd = pm.joint(n = str(prefix) + str(finger) + '_finder_End_jnt', r = True, p = ((side * newPos[1]),0,(side * 0.15)), rad = jntRadius)
         
         # add jnts to list
         jntList.extend([FingerMeta, Knuckle, Joint1, JointEnd]) 
@@ -447,6 +466,6 @@ ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
 skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
 
 #CreateArm(jointList, IKjointList, FKjointList, CTRLs, 'R_', 0.1)
-CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'L_', 0.1)
-
+CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'R_', 0.1)
+CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList, IKjointList, FKjointList, CTRLs, 'L_', 0.1)
 

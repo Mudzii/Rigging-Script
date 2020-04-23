@@ -9,6 +9,25 @@ import maya.cmds as cmds
 #from maya import OpenMayaUI as omui
 from math import pow,sqrt
 
+import sys
+
+path = r'D:\00.Documents\03. Scripting and Programming\Maya Scripts'
+if path not in sys.path:
+    sys.path.append(path)
+
+import armRigTest 
+
+"""
+jointList = []
+IKjointList = []
+FKjointList = []
+CTRLs = []
+
+
+armRigTest.CreateArm(jointList, IKjointList, FKjointList, CTRLs, 'L_', 0.1)
+"""
+
+
 # Qt
 try:
     import PySide2

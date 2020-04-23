@@ -458,7 +458,7 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
 
 # ======================================================================== # 
 
-
+# TEST #
 jointList = []
 IKjointList = []
 FKjointList = []

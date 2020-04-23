@@ -169,8 +169,7 @@ def CreateIK(jntIKList, ctrl_GRP):
 
     # create IK handle 
     arm_ik = pm.ikHandle( n = str(prefix) + 'IK_Handle', sj=jntIKList[0], ee=jntIKList[2])
-    pm.parent(arm_ik[0],Arm_CTRL)
-    
+    pm.parent(arm_ik[0],Arm_CTRL)    
     
     # create pole vector CTRL
     poleVector_CTRL = str(prefix) + 'pole_vector'
@@ -229,8 +228,7 @@ def CreateFK(jntFKList,ctrl_GRP):
 # ================================ # 
 
 def IK_FKChain(jnList, IKJntList, FKJntList, ctrl_GRP):
-    
-    
+       
     # create IK jnt chain
     IKChain = cmds.duplicate(str(jnList[1]), n= str(jnList[1] + '_IK'))[0]
     pm.parent(IKChain, world=True )
@@ -292,12 +290,6 @@ def CreateFinger(side, prefix, jntList, wristJnt, wristPos, finger, pos, jntRadi
         
     pm.parent(FingerMeta, wristJnt)
     CleanHist(FingerMeta)
-    
-    print '____'
-    print finger
-    print pos 
-    print side 
-
     
     if finger is not 'thumb':
         # create rest of jnts
@@ -402,6 +394,17 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     CreateStarCTRL(Switch_CTRL, 0.5, [0.3,0.3,0.3], (0,0,1))
     pm.addAttr(longName='IK_FK_Switch', at = 'double', defaultValue=0.0, minValue=0.0, maxValue=1)
     pm.setAttr(str(Switch_CTRL) + '.IK_FK_Switch', k = True)
+    
+    # IK FK switch line
+    Switch_Line = pm.curve( p=[(0, 0, 0), (-0.3,0,0) ,(-0.6, 0, 0),  (-1, 0, 0)], k=[0,0,0,1,1,1] )
+    curvePoints = cmds.ls('{0}.ep[:]'.format(Switch_Line), fl = True)
+    
+    pm.select(wrist)
+    wristPos = cmds.xform( query=True, translation=True, worldSpace=True )
+    
+    pm.move( curvePoints[0], wristPos)
+    
+  
 
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(wrist, str(Switch_CTRL), mo = False, sr= ['x', 'y', 'z'])
@@ -466,6 +469,6 @@ ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
 skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
 
 #CreateArm(jointList, IKjointList, FKjointList, CTRLs, 'R_', 0.1)
-CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'R_', 0.1)
+#CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'R_', 0.1)
 CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList, IKjointList, FKjointList, CTRLs, 'L_', 0.1)
 

@@ -432,7 +432,7 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     pm.parent(str(CTRL_cluster[1]), str(Switch_Offset_GRP))
     
 
-    #pm.parent(str(wristCluster[0]), str(ctrl_GRP))
+    pm.parent(str(wristCluster[1]), str(ctrl_GRP))
    
     # connect IK FK with constraints
     revUtility = pm.shadingNode('reverse', n= str(prefix) + 'arm_IK_FK_reverse_node', asUtility=True)

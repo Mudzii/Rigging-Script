@@ -342,7 +342,7 @@ def CreateHand(side, wristJnt, jntRadius):
     return handJntList
   
 # ================================ # 
-def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
+def CreateArm(WS_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
     
     side = 1
     if prefix == 'R_':
@@ -398,7 +398,6 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     pm.setAttr(str(Switch_CTRL) + '.IK_FK_Switch', k = True)
     
 
-    
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(wrist, str(Switch_CTRL), mo = False, sr= ['x', 'y', 'z'])
     pm.delete(tempConst)
@@ -412,7 +411,6 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     Switch_Line = pm.curve(n = str(prefix) + 'IK_FK_VIS',d=1, p=[(0, 0, 0),(-1, 0, 0)], k=[0,1] )
     curvePoints = cmds.ls('{0}.cv[:]'.format(Switch_Line), fl = True)
     
-
     wristPos = cmds.xform(str(wrist), query=True, translation=True, worldSpace=True ) 
     CTRL_Pos = cmds.xform(str(Switch_CTRL), query=True, translation=True, worldSpace=True )
     
@@ -430,8 +428,6 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     
     tempCtrlConst = pm.parentConstraint(str(wrist), str(Switch_Offset_GRP), mo=True, w = 1)
     pm.parent(str(CTRL_cluster[1]), str(Switch_Offset_GRP))
-    
-
     pm.parent(str(wristCluster[1]), str(ctrl_GRP))
    
     # connect IK FK with constraints
@@ -442,7 +438,6 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     ConnectIKFKConstr(revUtility, elbowConstr, prefix, 'elbow', Switch_CTRL)
     ConnectIKFKConstr(revUtility, wristConstr, prefix, 'wrist', Switch_CTRL)
     
-
     pm.orientConstraint(str(prefix) + 'arm_IK_CTRL', IKJntList[2], mo = False)
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(prefix) + 'arm_IK_CTRL_offset_GRP.visibility', force = True)
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(prefix) + 'pole_vector_offset_GRP.visibility', force = True)
@@ -454,7 +449,6 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
    
     FK_GRP = pm.group( em=True, name= str(prefix) + 'FK_GRP' )
     pm.parent(str(FKJntList[0]) , FK_GRP)
-    
     
     arm_GRP = pm.group( em=True, name= str(prefix) + 'arm_GRP' )
     pm.parent(FK_GRP, arm_GRP)
@@ -469,6 +463,43 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     pm.parent(CTRLs[1], ctrl_GRP)
     pm.parent(CTRLs[2], ctrl_GRP)
     pm.parent(CTRLs[5], ctrl_GRP)
+    
+    
+    
+    
+    # parent switch
+    Hand_Space_GRP = pm.group( em=True, name= str(prefix) + 'Hand_Space')
+    spaceGrps.append(Hand_Space_GRP)
+    
+    pm.parent(Hand_Space_GRP, spaceGrps[0])
+    
+    hand_offset_GRP = ''
+    for i in range(len(CTRLs)):
+	    if str(CTRLs[i]) == str(prefix) + 'arm_IK_CTRL_offset_GRP':
+		    hand_offset_GRP = CTRLs[i]
+    
+    armSpaceConst = pm.parentConstraint(str(hand_offset_GRP), str(Hand_Space_GRP), mo = False, w = 1)
+    
+    world_HandSpace_GRP = pm.group( em=True, name= str(prefix) + 'world_Hand_space')
+    HandSpace_Pos = pm.xform(str(Hand_Space_GRP), q=1, ws=1, rp=1)
+ 	
+    pm.setAttr(world_HandSpace_GRP + ".rotatePivotX", HandSpace_Pos[0])
+    pm.setAttr(world_HandSpace_GRP + ".rotatePivotY", HandSpace_Pos[1])
+    pm.setAttr(world_HandSpace_GRP + ".rotatePivotZ", HandSpace_Pos[2])
+    pm.setAttr(world_HandSpace_GRP + ".scalePivotX", HandSpace_Pos[0])
+    pm.setAttr(world_HandSpace_GRP + ".scalePivotY", HandSpace_Pos[1])
+    pm.setAttr(world_HandSpace_GRP + ".scalePivotZ", HandSpace_Pos[2])
+    
+    pm.parent(world_HandSpace_GRP, spaceGrps[1])
+    HandCTRLSpace_GRP = pm.group( em=True, name= str(prefix) + 'Hand_CTRL_space')
+    HandCTRLSpace_CTRL = pm.listRelatives(str(hand_offset_GRP))
+   
+    pm.parent(HandCTRLSpace_GRP,hand_offset_GRP)
+    pm.parent(HandCTRLSpace_CTRL, HandCTRLSpace_GRP)
+    
+    
+    #WS_LOC
+    #spaceGrps
 
 
 # ======================================================================== # 
@@ -484,11 +515,32 @@ IKjointList2 = []
 FKjointList2 = []
 CTRLs2 = []
 
+
+
+
 rigging_GRP = pm.group( em=True, name= 'rigging_GRP' )
 ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
 skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
 
+spaceGrps = []
+world_LOC = pm.spaceLocator(n ='worldSpace_LOC')
+
+spaces_GRP = pm.group( em=True, name= 'spaces_GRP')
+world_GRP = pm.group( em=True, name= 'world_Space')
+
+spaceGrps.append(spaces_GRP)
+spaceGrps.append(world_GRP)
+
+#L_Hand_GRP = pm.group( em=True, name= 'L_Hand_Space')
+#R_Hand_GRP = pm.group( em=True, name= 'R_Hand_Space')
+
+pm.parent(world_GRP, spaces_GRP)
+WorldSpaceConst = pm.parentConstraint(str(world_LOC), str(world_GRP), mo = False, w = 1)
+
+#pm.parent(L_Hand_GRP, spaces_GRP)
+#pm.parent(R_Hand_GRP, spaces_GRP)
+
 #CreateArm(jointList, IKjointList, FKjointList, CTRLs, 'R_', 0.1)
 #CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'R_', 0.1)
-CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList, IKjointList, FKjointList, CTRLs, 'L_', 0.1)
+CreateArm(world_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, jointList, IKjointList, FKjointList, CTRLs, 'L_', 0.1)
 

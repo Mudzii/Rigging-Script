@@ -466,8 +466,7 @@ def CreateArm(WS_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, I
     
     
     
-    
-    # parent switch
+    # parent switch ----------------------------------------------------
     Hand_Space_GRP = pm.group( em=True, name= str(prefix) + 'Hand_Space')
     spaceGrps.append(Hand_Space_GRP)
     
@@ -494,8 +493,31 @@ def CreateArm(WS_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, I
     HandCTRLSpace_GRP = pm.group( em=True, name= str(prefix) + 'Hand_CTRL_space')
     HandCTRLSpace_CTRL = pm.listRelatives(str(hand_offset_GRP))
    
-    pm.parent(HandCTRLSpace_GRP,hand_offset_GRP)
+    
+    pm.setAttr(HandCTRLSpace_GRP + ".rotatePivotX", HandSpace_Pos[0])
+    pm.setAttr(HandCTRLSpace_GRP + ".rotatePivotY", HandSpace_Pos[1])
+    pm.setAttr(HandCTRLSpace_GRP + ".rotatePivotZ", HandSpace_Pos[2])
+    pm.setAttr(HandCTRLSpace_GRP + ".scalePivotX", HandSpace_Pos[0])
+    pm.setAttr(HandCTRLSpace_GRP + ".scalePivotY", HandSpace_Pos[1])
+    pm.setAttr(HandCTRLSpace_GRP + ".scalePivotZ", HandSpace_Pos[2])
+    
+    
+    pm.parent(HandCTRLSpace_GRP,hand_offset_GRP)   
     pm.parent(HandCTRLSpace_CTRL, HandCTRLSpace_GRP)
+    CleanHist(HandCTRLSpace_CTRL)
+    
+    world_HandSpace_Inbetween_GRP = pm.group( em=True, name= str(prefix) + 'world_Hand_space_inbetween')
+    pm.setAttr(world_HandSpace_Inbetween_GRP + ".rotatePivotX", HandSpace_Pos[0])
+    pm.setAttr(world_HandSpace_Inbetween_GRP + ".rotatePivotY", HandSpace_Pos[1])
+    pm.setAttr(world_HandSpace_Inbetween_GRP + ".rotatePivotZ", HandSpace_Pos[2])
+    pm.setAttr(world_HandSpace_Inbetween_GRP + ".scalePivotX", HandSpace_Pos[0])
+    pm.setAttr(world_HandSpace_Inbetween_GRP + ".scalePivotY", HandSpace_Pos[1])
+    pm.setAttr(world_HandSpace_Inbetween_GRP + ".scalePivotZ", HandSpace_Pos[2])
+    
+    pm.parent(world_HandSpace_Inbetween_GRP, hand_offset_GRP)
+    CleanHist(world_HandSpace_Inbetween_GRP)
+    
+    world_inbetween_Const = pm.parentConstraint(str(world_HandSpace_GRP), str(world_HandSpace_Inbetween_GRP), mo = False, w = 1)
     
     
     #WS_LOC

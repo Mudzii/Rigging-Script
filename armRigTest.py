@@ -81,6 +81,7 @@ def CreateStarCTRL(CTRL_name, rad, scle, norm):
     pm.parent(nurbCTRL[0], offset_GRP)
     
     RecolourObj(CTRL_name)
+    
  
 # ================================ #    
 def CreateBallCTRL(CTRL_name, rad):
@@ -328,8 +329,8 @@ def CreateHand(side, wristJnt, jntRadius):
     handJntList = []
     prefix = str(wristJnt[0:2])
         
-    pm.select(wristJnt)
-    wristPos = cmds.xform( query=True, translation=True, worldSpace=True )
+    #pm.select(wristJnt)
+    wristPos = cmds.xform(str(wristJnt), query=True, translation=True, worldSpace=True )
     
     CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'middle', ((side *0.3), -0.05, 0.1), jntRadius)
     CreateFinger(side, prefix, handJntList, wristJnt, wristPos, 'index', ((side * 0.3), -0.06, 0.25), jntRadius)
@@ -391,10 +392,13 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     
     #create IK/FK Switch ctrl
     Switch_CTRL = str(prefix) + 'IK_FK_Switch_CTRL'
+    Switch_Offset_GRP = str(Switch_CTRL) + '_offset_GRP'
     CreateStarCTRL(Switch_CTRL, 0.5, [0.3,0.3,0.3], (0,0,1))
     pm.addAttr(longName='IK_FK_Switch', at = 'double', defaultValue=0.0, minValue=0.0, maxValue=1)
     pm.setAttr(str(Switch_CTRL) + '.IK_FK_Switch', k = True)
+    
 
+    
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(wrist, str(Switch_CTRL), mo = False, sr= ['x', 'y', 'z'])
     pm.delete(tempConst)
@@ -402,23 +406,34 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
     pm.move(str(Switch_CTRL), (side * 0.3,0.6, -1 ),  relative = True)
     CleanHist(Switch_CTRL)
     
-
+    pm.xform(str(Switch_Offset_GRP), cp = True)
+    
     # IK FK switch line
     Switch_Line = pm.curve(n = str(prefix) + 'IK_FK_VIS',d=1, p=[(0, 0, 0),(-1, 0, 0)], k=[0,1] )
     curvePoints = cmds.ls('{0}.cv[:]'.format(Switch_Line), fl = True)
     
-    pm.select(wrist)
-    wristPos = cmds.xform( query=True, translation=True, worldSpace=True )
-    
-    pm.select(Switch_CTRL)
-    CTRL_Pos = cmds.xform( query=True, translation=True, worldSpace=True )
+
+    wristPos = cmds.xform(str(wrist), query=True, translation=True, worldSpace=True ) 
+    CTRL_Pos = cmds.xform(str(Switch_CTRL), query=True, translation=True, worldSpace=True )
     
     pm.move( curvePoints[1], wristPos)
     pm.move( curvePoints[0], ((side * 5.07),-0.11,-0.6))  
     CleanHist(Switch_Line)
     
-    pm.parent(Switch_Line, str(Switch_CTRL) + '_offset_GRP')
-     
+    pm.xform(str(Switch_Line), cp = True)
+    pm.parent(Switch_Line, str(ctrl_GRP))    
+    
+    wristCluster = pm.cluster(curvePoints[1], n = (str(wrist) + '_IKFK_line_cluster'))
+    CTRL_cluster = pm.cluster(curvePoints[0], n = (str(Switch_CTRL) + '_IKFK_line_cluster'))
+    
+    tempClusterConst = pm.parentConstraint(str(wrist), str(wristCluster[1]), mo = False, w = 1)
+    
+    tempCtrlConst = pm.parentConstraint(str(wrist), str(Switch_Offset_GRP), mo=True, w = 1)
+    pm.parent(str(CTRL_cluster[1]), str(Switch_Offset_GRP))
+    
+
+    #pm.parent(str(wristCluster[0]), str(ctrl_GRP))
+   
     # connect IK FK with constraints
     revUtility = pm.shadingNode('reverse', n= str(prefix) + 'arm_IK_FK_reverse_node', asUtility=True)
     pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(revUtility) + '.inputX', force = True)
@@ -458,7 +473,7 @@ def CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, IKJntList, FKJntList
 
 # ======================================================================== # 
 
-# TEST #
+
 jointList = []
 IKjointList = []
 FKjointList = []
@@ -476,3 +491,4 @@ skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
 #CreateArm(jointList, IKjointList, FKjointList, CTRLs, 'R_', 0.1)
 #CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList2, IKjointList2, FKjointList2, CTRLs2, 'R_', 0.1)
 CreateArm(rigging_GRP, ctrl_GRP, skeleton_GRP, jointList, IKjointList, FKjointList, CTRLs, 'L_', 0.1)
+

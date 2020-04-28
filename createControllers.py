@@ -61,6 +61,7 @@ def ReparentShape(nurbCTRL, parentCTRL):
 # =================== Function to create star-shape CTRL =============================== #
 def CreateStarCTRL(CTRL_name, CTRL_list, rad, scle, norm):
     
+    
     # create NURB circle
     nurbCTRL = cmds.circle( n = str(CTRL_name), nr =norm, c=(0, 0, 0), r= rad )
     
@@ -115,15 +116,6 @@ def CreateBallCTRL(CTRL_name, CTRL_list, rad):
     
     RecolourObj(CTRL_name) 
     CTRL_list.append(offset_GRP)   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
        

@@ -466,6 +466,10 @@ def CreateArm(WS_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, I
     
     
     
+
+   
+    
+    
     # parent switch ----------------------------------------------------
     Hand_Space_GRP = pm.group( em=True, name= str(prefix) + 'Hand_Space')
     spaceGrps.append(Hand_Space_GRP)
@@ -517,12 +521,18 @@ def CreateArm(WS_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, jntList, I
     pm.parent(world_HandSpace_Inbetween_GRP, hand_offset_GRP)
     CleanHist(world_HandSpace_Inbetween_GRP)
     
-    world_inbetween_Const = pm.parentConstraint(str(world_HandSpace_GRP), str(world_HandSpace_Inbetween_GRP), mo = False, w = 1)
-    
-    
-    #WS_LOC
-    #spaceGrps
+    world_inbetween_Const = pm.parentConstraint(str(world_HandSpace_GRP), str(world_HandSpace_Inbetween_GRP), mo = False, w = 1)  
+    resultConst = pm.parentConstraint(world_HandSpace_Inbetween_GRP, HandCTRLSpace_CTRL[0], n= (str(prefix) + 'hand_result_parentConstraint'), mo = False, w = 1)    
 
+    
+    enums = [str(prefix) + 'arm', 'world']
+    spaceAttr = HandCTRLSpace_CTRL[0].addAttr('Parent_Space', at = 'enum', en = enums, k=True)
+    #spaceAttr = pm.setAttr(str(HandCTRLSpace_CTRL[0]) + '.Parent_Space', k = True)
+    
+    #conditionUtilityWorld = pm.shadingNode('condition', n= str(prefix) + 'arm_space_condition_node', asUtility=True)
+    
+    #pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(revUtility) + '.inputX', force = True)
+    
 
 # ======================================================================== # 
 

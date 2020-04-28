@@ -7,8 +7,8 @@ import maya.cmds as cmds
 
 
 #  ================= Function to create twist joints =================================== #
-
 #def CreateTwistJnt(jntList, jntRadius, jntName, prefix, prntJnt, nxtJnt, moveConst, Reparent):
+    
 def CreateTwistJnt(jntList, prefix, jntName, prntJnt, nxtJnt, jntRadius, moveConst, Reparent):
     
     twistJnt = cmds.duplicate(str(prntJnt), n= str(prefix) + str(jntName), parentOnly=True)[0]
@@ -27,3 +27,9 @@ def CreateTwistJnt(jntList, prefix, jntName, prntJnt, nxtJnt, jntRadius, moveCon
     # add new jnt to list
     ind = jntList.index(prntJnt)
     jntList.insert(ind + 1, twistJnt)
+
+   
+
+
+    # add jnts to list & create IK FK jnts    
+    jntList.extend([clavicle, shoulder, elbow, wrist])

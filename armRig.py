@@ -43,6 +43,8 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     # add jnts to list & create IK FK jnts    
     jntList.extend([clavicle, shoulder, elbow, wrist])
     
+    
+    
 
 jntList = []
 IKJntList = []

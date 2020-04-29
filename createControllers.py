@@ -79,9 +79,9 @@ def CreateStarCTRL(CTRL_name, CTRL_list, rad, scle, norm):
     pm.parent(nurbCTRL[0], offset_GRP)
     
     RecolourObj(CTRL_name, 'nurbsCurve')
-    CTRL_list.append(offset_GRP)   
+    CTRL_list.append(offset_GRP)  
 
-    
+        
 # =================== Function to create ball CTRL ===================================== #       
 def CreateBallCTRL(CTRL_name, CTRL_list, rad):
     
@@ -114,8 +114,42 @@ def CreateBallCTRL(CTRL_name, CTRL_list, rad):
     # create offset GRP, parent CTRL to it and add CTRL to list
     offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
     
-    RecolourObj(CTRL_name) 
+    RecolourObj(CTRL_name, 'nurbsCurve') 
     CTRL_list.append(offset_GRP)   
 
 
+    
+# =================== Function to create simple circle CTRL ============================ #
+def CreateCircleCTRL(CTRL_name, CTRL_list, prntJnt, norm, rad, offset):
+    
+    #create CTRL and offset grp
+    CTRL = cmds.circle( n = str(CTRL_name), nr = norm, c=(0, 0, 0), r= rad )
+    offset_GRP = pm.group( em=True, name= str(CTRL_name) + '_offset_GRP' )
+    pm.parent(CTRL[0], offset_GRP) 
+    
+    # clear history for both objects
+    CleanHist(CTRL[0])
+    CleanHist(offset_GRP)
+    
+    # temp parentconstr GRP to move to pos (with rot)
+    tempConst = pm.parentConstraint(prntJnt, str(offset_GRP), mo = False)
+    pm.delete(tempConst)
+    
+    # rotate curve CVs
+    curveCVs = cmds.ls('{0}.cv[:]'.format(CTRL[0]), fl = True)
+    pm.rotate(curveCVs, offset)
+    
+    # parent const to joint
+    pm.parentConstraint(str(CTRL_name), str(prntJnt), mo= False, w=1)
+    
+    # recolor CTRL and add to list 
+    RecolourObj(CTRL_name, 'nurbsCurve')
+    CTRL_list.append(offset_GRP)    
+    
+    
+    
+    
+    
+    
+    
        

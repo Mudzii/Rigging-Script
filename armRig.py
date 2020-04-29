@@ -19,8 +19,79 @@ import createJoints
 # ====================================================================================== #
 # ====================================================================================== #
 
-#  ================= Function to create CTRLS ========================================== #
-def IK_FKChain(jnList, IKJntList, FKJntList, ctrl_GRP):
+
+#  ================= Function to create FK CTRLS ======================================= #
+def CreateFK(prefix, jntFKList,ctrl_GRP):
+    
+    offset_GRP_Name = '_offset_GRP'
+
+    # shoulder CTRL
+    shoulder_CTR_Name = str(prefix) + 'shoulder_FK_CTRL'  
+    createControllers.CreateCircleCTRL(str(shoulder_CTR_Name), ctrl_GRP, jntFKList[0], (0,1,0), 0.6, (0,0,-100))
+    
+    # elbow CTRL
+    elbow_CTR_Name = str(prefix) + 'elbow_FK_CTRL'  
+    createControllers.CreateCircleCTRL(str(elbow_CTR_Name), ctrl_GRP, jntFKList[1], (0,1,0), 0.5, (0,0,-100))
+    
+    # wrist CTRL
+    wrist_CTR_Name = str(prefix) + 'wrist_FK_CTRL'  
+    createControllers.CreateCircleCTRL(str(wrist_CTR_Name), ctrl_GRP, jntFKList[2], (0,1,0), 0.3, (0,0,-100))
+    
+    # parent GTRLS
+    pm.parent(str(wrist_CTR_Name) + str(offset_GRP_Name), elbow_CTR_Name)
+    pm.parent(str(elbow_CTR_Name) + str(offset_GRP_Name), shoulder_CTR_Name)
+ 
+    # add CTRL to list    
+    ctrl_GRP.extend([str(shoulder_CTR_Name) + str(offset_GRP_Name) ,str(wrist_CTR_Name) + str(offset_GRP_Name), str(elbow_CTR_Name) + str(offset_GRP_Name)])
+            
+
+#  ================= Function to create IK CTRLS ======================================= #
+def CreateIK(prefix, jntIKList, ctrl_GRP):
+    
+    offset_GRP_Name = '_offset_GRP'
+       
+    # create arm CTRL ========================
+    Arm_CTRL = str(prefix) + "arm_IK_CTRL"
+    Arm_Offset_GRP = str(Arm_CTRL) + str(offset_GRP_Name)
+    createControllers.CreateStarCTRL(Arm_CTRL, ctrl_GRP, 0.6, [0.4, 0.4, 0.4], (1,0,0))
+    
+    # move offset GRP to wrist jnt, remove const
+    tempConst = pm.parentConstraint(jntIKList[2], str(Arm_Offset_GRP))
+    pm.delete(tempConst)
+
+    # create IK handle 
+    arm_ik = pm.ikHandle( n = str(prefix) + 'IK_Handle', sj=jntIKList[0], ee=jntIKList[2])
+    pm.parent(arm_ik[0], Arm_CTRL)    
+     
+    # create pole vector CTRL ================
+    poleVector_CTRL = str(prefix) + 'pole_vector'
+    pole_GRP = str(poleVector_CTRL) + str(offset_GRP_Name)
+    createControllers.CreateBallCTRL(str(poleVector_CTRL), ctrl_GRP, 0.15)
+   
+    # move offset GRP to wrist jnt, remove const
+    tempConst = pm.parentConstraint(jntIKList[1], str(pole_GRP), sr = ['x', 'y', 'z'])
+    pm.delete(tempConst)
+    CleanHist(pole_GRP)    
+  
+    # point + aim constraint CTRL to prevent joint from moving after pole V Constr
+    pointConst = pm.pointConstraint( str(jntIKList[0]), str(jntIKList[2]), str(poleVector_CTRL), mo= False, w=1 )
+    pm.delete(pointConst)
+ 
+    aimConst = pm.aimConstraint( str(jntIKList[1]), str(poleVector_CTRL), mo= False, w=1 )
+    pm.delete(aimConst)
+       
+    # constrain PV
+    PVConstr = pm.poleVectorConstraint(poleVector_CTRL, arm_ik[0], n = str(poleVector_CTRL) + '_constraint')
+    pm.move(str(poleVector_CTRL), (1,0, 0 ), os = True, wd = False, relative = True)
+    
+    # clean hist, parent and add CTRS to list
+    CleanHist(poleVector_CTRL)   
+    pm.parent(poleVector_CTRL, pole_GRP) 
+    ctrl_GRP.extend([str(Arm_Offset_GRP), pole_GRP])
+
+
+#  ================= Function to create IKFK Chain ====================================== #
+def IK_FKChain(prefix, jnList, IKJntList, FKJntList, ctrl_GRP):
     
     # create IK jnt chain =============
     IKChain = cmds.duplicate(str(jnList[1]), n= str(jnList[1] + '_IK'))[0]
@@ -39,7 +110,7 @@ def IK_FKChain(jnList, IKJntList, FKJntList, ctrl_GRP):
     IKJntList = IKJntList[::-1]
     
     
-    #CreateIK(IKJntList,ctrl_GRP)
+    CreateIK(prefix, IKJntList,ctrl_GRP)
     
     # create FK jnt chain =============
     FKChain = cmds.duplicate(str(jnList[1]), n= str(jnList[1] + '_FK'))[0]
@@ -57,7 +128,7 @@ def IK_FKChain(jnList, IKJntList, FKJntList, ctrl_GRP):
     FKJntList.append(FKChain)
     FKJntList = FKJntList[::-1]
     
-    #CreateFK(FKJntList,ctrl_GRP)
+    CreateFK(prefix, FKJntList,ctrl_GRP)
 
 #  ================= Function to create Arm ============================================ #
 #def CreateArm(WS_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, vis_aid_GRP, jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
@@ -96,7 +167,17 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     createControllers.CreateCircleCTRL(str(clavicle_Ctrl),CTRLs_GRP, clavicle, (0,1,0), 0.8, (0,0,80))   
     
     # ===================== create IK FK chain ========================= *
-    IK_FKChain(jntList, IKJntList, FKJntList, CTRLs_GRP)
+    #IK_FKChain(prefix, jntList, IKJntList, FKJntList, CTRLs_GRP)
+    #IKJntList = IKJntList[::-1]
+    #FKJntList = FKJntList[::-1]
+    
+
+    # ===================== create Hand ================================ *
+    handJntList = createJoints.CreateHand(prefix, axis, wrist, jntRadius)
+    jntList.extend(handJntList)
+    
+    print handJntList
+    
     
     #print CTRLs_GRP
  
@@ -111,4 +192,14 @@ FKJntList = []
 jntRadius = 0.1
 
 CreateArm('na', 'na', 'na', CTRL_List, 'L_', jntList, IKJntList, FKJntList, jntRadius)
+
+
+
+jntList2 = []
+CTRL_List2 = []
+IKJntList2 = []
+FKJntList2 = []
+jntRadius2 = 0.1
+
+CreateArm('na', 'na', 'na', CTRL_List2, 'R_', jntList2, IKJntList2, FKJntList2, jntRadius2)
     

@@ -148,8 +148,7 @@ def CreateCircleCTRL(CTRL_name, CTRL_list, prntJnt, norm, rad, offset):
     
     
     
-    
-    
+
     
     
        

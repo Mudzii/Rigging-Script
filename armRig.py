@@ -176,8 +176,8 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     handJntList = createJoints.CreateHand(prefix, axis, wrist, jntRadius)
     jntList.extend(handJntList)
     
-    print handJntList
     
+    twistJntList = createJoints.CreateArmTwistJnts(prefix, jntList, jntRadius)
     
     #print CTRLs_GRP
  

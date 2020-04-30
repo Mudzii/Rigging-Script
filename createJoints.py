@@ -14,6 +14,18 @@ import createControllers
 
 # ====================================================================================== #
 # ====================================================================================== #
+
+#  ================= Function to connect Constraints =================================== #
+def ConnectIKFKConstr(utilNode, Constr, prefix, jnt, Switch_CTRL):
+    
+    constrAttr = pm.listAttr( str(Constr), st= str(prefix) + str(jnt) + '*')   
+
+    pm.connectAttr(str(Switch_CTRL) + '.IK_FK_Switch', str(Constr) + '.' + str(constrAttr[1]), force = True)
+    pm.connectAttr(str(utilNode) + '.outputX', str(Constr) + '.' + str(constrAttr[0]), force = True)
+
+    
+
+#  ================= Function to create twist joints =================================== #
 def CreateArmTwistJnts(prefix, jntList, jntRadius):
     
     twistJntList = []
@@ -30,7 +42,7 @@ def CreateArmTwistJnts(prefix, jntList, jntRadius):
     
     return twistJntList
     
-#  ================= Function to create twist joints =================================== #
+#  ================= Function to create twist joint ==================================== #
 #def CreateTwistJnt(jntList, jntRadius, jntName, prefix, prntJnt, nxtJnt, moveConst, Reparent):
 def CreateTwistJnt(prefix, jntList, jntName, prntJnt, nxtJnt, jntRadius, moveConst, Reparent):
     

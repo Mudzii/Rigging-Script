@@ -71,7 +71,7 @@ def CreateIK(prefix, jntIKList, ctrl_GRP):
     # move offset GRP to wrist jnt, remove const
     tempConst = pm.parentConstraint(jntIKList[1], str(pole_GRP), sr = ['x', 'y', 'z'])
     pm.delete(tempConst)
-    CleanHist(pole_GRP)    
+    createControllers.CleanHist(pole_GRP)    
   
     # point + aim constraint CTRL to prevent joint from moving after pole V Constr
     pointConst = pm.pointConstraint( str(jntIKList[0]), str(jntIKList[2]), str(poleVector_CTRL), mo= False, w=1 )
@@ -85,7 +85,7 @@ def CreateIK(prefix, jntIKList, ctrl_GRP):
     pm.move(str(poleVector_CTRL), (1,0, 0 ), os = True, wd = False, relative = True)
     
     # clean hist, parent and add CTRS to list
-    CleanHist(poleVector_CTRL)   
+    createControllers.CleanHist(poleVector_CTRL)   
     pm.parent(poleVector_CTRL, pole_GRP) 
     ctrl_GRP.extend([str(Arm_Offset_GRP), pole_GRP])
 
@@ -166,21 +166,36 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     clavicle_Ctrl = str(prefix) + 'clavicle_CTRL'
     createControllers.CreateCircleCTRL(str(clavicle_Ctrl),CTRLs_GRP, clavicle, (0,1,0), 0.8, (0,0,80))   
     
-    # ===================== create IK FK chain ========================= *
-    #IK_FKChain(prefix, jntList, IKJntList, FKJntList, CTRLs_GRP)
-    #IKJntList = IKJntList[::-1]
-    #FKJntList = FKJntList[::-1]
     
-
+    # ===================== create IK FK chain ========================= *
+    IK_FKChain(prefix, jntList, IKJntList, FKJntList, CTRLs_GRP)
+    IKJntList = IKJntList[::-1]
+    FKJntList = FKJntList[::-1]
+    
+    # constrain jnts to IK/FK
+    shoulderConstr = pm.parentConstraint(FKJntList[0], IKJntList[0], str(shoulder), mo = False, w=1)
+    elbowConstr = pm.parentConstraint(FKJntList[1], IKJntList[1], str(elbow), mo = False, w=1)
+    wristConstr = pm.parentConstraint(FKJntList[2], IKJntList[2], str(wrist), mo = False, w=1)
+    
     # ===================== create Hand ================================ *
     handJntList = createJoints.CreateHand(prefix, axis, wrist, jntRadius)
-    jntList.extend(handJntList)
+    jntList.extend(handJntList)     
+
+    # ===================== create Twist Jnts ========================== *
+    #twistJntList = createJoints.CreateArmTwistJnts(prefix, jntList, jntRadius)
     
+    # ===================== create IKFK Switch ========================== *
+    Switch_CTRL = str(prefix) + 'IK_FK_Switch_CTRL'
+    Switch_CTRL_Line = str(prefix) + 'IK_FK_VIS'
+    clusterGRP = createControllers.CreateIKFKSwitch(axis, Switch_CTRL, CTRLs_GRP, Switch_CTRL_Line, wrist) 
     
-    twistJntList = createJoints.CreateArmTwistJnts(prefix, jntList, jntRadius)
-    
-    #print CTRLs_GRP
- 
+    switchAttr = pm.listAttr(Switch_CTRL, s = True, k = True, v = True)
+    lenAttr = len(switchAttr)
+    print "-----------"
+    print lenAttr
+    print "-----------"
+    print switchAttr[lenAttr - 1]
+    print "-----------"
     
 # ====================================================================================== #    
 # ====================================================================================== #    

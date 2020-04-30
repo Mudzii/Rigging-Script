@@ -146,9 +146,52 @@ def CreateCircleCTRL(CTRL_name, CTRL_list, prntJnt, norm, rad, offset):
     RecolourObj(CTRL_name, 'nurbsCurve')
     CTRL_list.append(offset_GRP)    
     
+  
+# =================== Function to create IK/FK CTRL ==================================== #    
+def CreateIKFKSwitch(axis, Switch_CTRL, CTRL_list, visLine, wristJnt):
     
+    clusterGRP = []
     
-
+    #create IK/FK Switch ctrl ==========
+    Switch_Offset_GRP = str(Switch_CTRL) + '_offset_GRP'
+    CreateStarCTRL(Switch_CTRL, CTRL_list, 0.5, [0.3,0.3,0.3], (0,0,1))
+    pm.addAttr(longName='IK_FK_Switch', at = 'double', defaultValue=0.0, minValue=0.0, maxValue=1)
+    pm.setAttr(str(Switch_CTRL) + '.IK_FK_Switch', k = True) 
     
+    # move offset GRP to wrist jnt, remove const
+    tempConst = pm.parentConstraint(wristJnt, str(Switch_CTRL), mo = False, sr= ['x', 'y', 'z'])
+    pm.delete(tempConst)
+   
+    pm.move(str(Switch_CTRL), (axis * 0.3,0.6, -1 ),  relative = True)
+    CleanHist(Switch_CTRL)
+    
+    pm.xform(str(Switch_Offset_GRP), cp = True)   
+    
+    # IK FK switch line ================
+    Switch_Line = pm.curve(n = visLine, d=1, p=[(0, 0, 0),(-1, 0, 0)], k=[0,1] )
+    
+    curvePoints = cmds.ls('{0}.cv[:]'.format(Switch_Line), fl = True)
+    wristPos = cmds.xform(str(wristJnt), query=True, translation=True, worldSpace=True ) 
+    CTRL_Pos = cmds.xform(str(Switch_CTRL), query=True, translation=True, worldSpace=True )
+    
+    pm.move( curvePoints[1], wristPos)
+    pm.move( curvePoints[0], ((axis * 5.07), 0.09, -0.6))
+    CleanHist(Switch_Line)
+    
+    pm.xform(str(Switch_Line), cp = True)
+    
+    # create clusters
+    wristCluster = pm.cluster(curvePoints[1], n = (str(wristJnt) + '_IKFK_line_cluster'))
+    CTRL_cluster = pm.cluster(curvePoints[0], n = (str(Switch_CTRL) + '_IKFK_line_cluster'))
+    
+    clusterGRP.extend([wristCluster, CTRL_cluster])
+    
+    tempClusterConst = pm.parentConstraint(str(wristJnt), str(wristCluster[1]), mo = False, w = 1) 
+    tempCtrlConst = pm.parentConstraint(str(wristJnt), str(Switch_Offset_GRP), mo=True, w = 1)
+    pm.parent(str(CTRL_cluster[1]), str(Switch_Offset_GRP))
+    
+    CTRL_list.append(Switch_Offset_GRP) 
+    
+    return clusterGRP
     
        

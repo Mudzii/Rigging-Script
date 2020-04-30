@@ -119,8 +119,3 @@ def CreateHand(prefix, axis, wristJnt, jntRadius):
     CreateFinger(axis, prefix, handJntList, wristJnt, wristPos, 'thumb', (0.1, -0.05, 0.25), jntRadius)
    
     return handJntList
-    
-    
-    
-    
-    

@@ -20,6 +20,39 @@ import createJoints
 # ====================================================================================== #
 
 
+#  ================= Function to connect IKFK switch =================================== #
+def ConnectIKFKSwitch(prefix, Switch_CTRL, CTRLs_GRP, elbowIK, constrGRP): 
+    
+
+    switchAttr = pm.listAttr(Switch_CTRL, s = True, k = True, v = True)
+    lenAttr = len(switchAttr)
+    IKFKSwitchAttr = switchAttr[lenAttr - 1]
+   
+    # create reverse utility node
+    revUtility = pm.shadingNode('reverse', n= str(prefix) + 'arm_IK_FK_reverse_node', asUtility=True)
+    pm.connectAttr(str(Switch_CTRL) + '.' + str(IKFKSwitchAttr), str(revUtility) + '.inputX', force = True)
+     
+    #ConnectIKFKConstr(utilNode, Constr, prefix, jnt, Switch_CTRL):
+    createJoints.ConnectIKFKConstr(revUtility, constrGRP[0], prefix, 'shoulder', Switch_CTRL)
+    createJoints.ConnectIKFKConstr(revUtility, constrGRP[1], prefix, 'elbow', Switch_CTRL)
+    createJoints.ConnectIKFKConstr(revUtility, constrGRP[2], prefix, 'wrist', Switch_CTRL)
+    
+    
+    ArmInd = CTRLs_GRP.index( str(prefix) + 'arm_IK_CTRL_offset_GRP')
+    arm_CTRL = pm.listRelatives(CTRLs_GRP[ArmInd])[0]
+    
+    PoleInd = CTRLs_GRP.index( str(prefix) + 'pole_vector_offset_GRP')
+    ShoulderInd = CTRLs_GRP.index( str(prefix) + 'shoulder_FK_CTRL_offset_GRP')
+    
+    # constrain
+    pm.orientConstraint(arm_CTRL, elbowIK, mo = False)
+    
+    pm.connectAttr(str(Switch_CTRL) + '.' + str(IKFKSwitchAttr), str(CTRLs_GRP[ArmInd]) + '.visibility', force = True)
+    pm.connectAttr(str(Switch_CTRL) + '.' + str(IKFKSwitchAttr), str(CTRLs_GRP[PoleInd]) + '.visibility', force = True)
+    
+    pm.connectAttr(str(revUtility) + '.outputX', str(CTRLs_GRP[ShoulderInd]) + '.visibility', force = True)
+    
+
 #  ================= Function to create FK CTRLS ======================================= #
 def CreateFK(prefix, jntFKList,ctrl_GRP):
     
@@ -138,12 +171,13 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     imp.reload(createControllers)
     imp.reload(createJoints)
     
+    
+    # ================================================================== *
     offset_GRP_Name = '_offset_GRP'
     axis = 1
     if prefix == 'R_':
         axis = -1
         
-      
     # ===================== create simple arm jnts ===================== *
     clavicle = pm.joint(n = str(prefix) + 'clavicle_jnt', p = (axis * 0.4,0,0), rad = jntRadius)
     shoulder = pm.joint(n = str(prefix) + 'shoulder_jnt', p = (axis * 1.3,0.3,0.4), rad = jntRadius) 
@@ -173,9 +207,13 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     FKJntList = FKJntList[::-1]
     
     # constrain jnts to IK/FK
+    constrGRP = []
+    
     shoulderConstr = pm.parentConstraint(FKJntList[0], IKJntList[0], str(shoulder), mo = False, w=1)
     elbowConstr = pm.parentConstraint(FKJntList[1], IKJntList[1], str(elbow), mo = False, w=1)
     wristConstr = pm.parentConstraint(FKJntList[2], IKJntList[2], str(wrist), mo = False, w=1)
+    
+    constrGRP.extend([shoulderConstr, elbowConstr, wristConstr])     
     
     # ===================== create Hand ================================ *
     handJntList = createJoints.CreateHand(prefix, axis, wrist, jntRadius)
@@ -187,27 +225,78 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     # ===================== create IKFK Switch ========================== *
     Switch_CTRL = str(prefix) + 'IK_FK_Switch_CTRL'
     Switch_CTRL_Line = str(prefix) + 'IK_FK_VIS'
+    
     clusterGRP = createControllers.CreateIKFKSwitch(axis, Switch_CTRL, CTRLs_GRP, Switch_CTRL_Line, wrist) 
+
+    ConnectIKFKSwitch(prefix, Switch_CTRL, CTRLs_GRP, IKJntList[2], constrGRP)
     
-    switchAttr = pm.listAttr(Switch_CTRL, s = True, k = True, v = True)
-    lenAttr = len(switchAttr)
-    print "-----------"
-    print lenAttr
-    print "-----------"
-    print switchAttr[lenAttr - 1]
-    print "-----------"
+    # ===================== Tidy ======================================= *
+    
+    # group vis & clusters
+    pm.parent(Switch_CTRL_Line, rigging_GRPs[3])
+    pm.parent(str(clusterGRP[1][1]), str(Switch_CTRL) + str(offset_GRP_Name))
+    pm.parent(str(clusterGRP[0][1]), str(rigging_GRPs[1]))
+    
+    # group ctrls
+    pm.parent(str(CTRLs_GRP[0]), str(rigging_GRPs[1]))
+    pm.parent(str(CTRLs_GRP[1]), str(rigging_GRPs[1]))
+    pm.parent(str(CTRLs_GRP[2]), str(rigging_GRPs[1]))
+    
+    pm.parent(str(CTRLs_GRP[5]), str(clavicle_Ctrl))   
+
+    # group IK/FK jnts
+    IK_GRP = pm.group( em=True, name= str(prefix) + 'IK_GRP' )
+    pm.parent(str(IKJntList[0]) , IK_GRP)
+   
+    FK_GRP = pm.group( em=True, name= str(prefix) + 'FK_GRP' )
+    pm.parent(str(FKJntList[0]) , FK_GRP)
+    
+    arm_GRP = pm.group( em=True, name= str(prefix) + 'arm_GRP' )
+    pm.parent(FK_GRP, arm_GRP)
+    pm.parent(IK_GRP, arm_GRP)
+    
+    pm.parent(arm_GRP, rigging_GRPs[0])
+    pm.parent(jntList[0], rigging_GRPs[2])
+    
+    pm.parent(str(CTRLs_GRP[11]), str(rigging_GRPs[4]))   
+    
+    # constrain arm grp to clavicle 
+    pm.parentConstraint(clavicle_Ctrl,arm_GRP, mo = True, w = 1) 
+
     
 # ====================================================================================== #    
 # ====================================================================================== #    
-#def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJntList, FKJntList, jntRadius):
+
+
+rigging_GRPs = []
+
+rigging_GRP = pm.group( em=True, name= 'rigging_GRP' )
+ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
+skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
+vis_GRP= pm.group( em=True, name= 'vis_aid' )
+switch_GRP= pm.group( em=True, name= 'IKFK_Switch_GRP' )
+
+rigging_GRPs.extend([rigging_GRP, ctrl_GRP, skeleton_GRP, vis_GRP, switch_GRP])
+pm.parent(vis_GRP, rigging_GRP)
+
+"""
+spaceGrps = []
+world_LOC = pm.spaceLocator(n ='worldSpace_LOC')
+
+spaces_GRP = pm.group( em=True, name= 'spaces_GRP')
+world_GRP = pm.group( em=True, name= 'world_Space')
+
+spaceGrps.append(spaces_GRP)
+spaceGrps.append(world_GRP)
+"""
+
 jntList = []
 CTRL_List = []
 IKJntList = []
 FKJntList = []
 jntRadius = 0.1
 
-CreateArm('na', 'na', 'na', CTRL_List, 'L_', jntList, IKJntList, FKJntList, jntRadius)
-
+CreateArm('na', 'na', rigging_GRPs, CTRL_List, 'L_', jntList, IKJntList, FKJntList, jntRadius)
 
 
 jntList2 = []
@@ -216,5 +305,5 @@ IKJntList2 = []
 FKJntList2 = []
 jntRadius2 = 0.1
 
-CreateArm('na', 'na', 'na', CTRL_List2, 'R_', jntList2, IKJntList2, FKJntList2, jntRadius2)
+CreateArm('na', 'na', rigging_GRPs, CTRL_List2, 'R_', jntList2, IKJntList2, FKJntList2, jntRadius2)
     

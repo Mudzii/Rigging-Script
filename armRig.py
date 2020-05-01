@@ -166,7 +166,7 @@ def IK_FKChain(prefix, jnList, IKJntList, FKJntList, ctrl_GRP):
 #  ================= Function to create Arm ============================================ #
 #def CreateArm(WS_LOC, spaceGrps, rigging_GRP, ctrl_GRP, skeleton_GRP, vis_aid_GRP, jntList, IKJntList, FKJntList, CTRLs, prefix, jntRadius):
 
-def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJntList, FKJntList, jntRadius):
+def CreateArm(rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJntList, FKJntList, jntRadius):
     
     imp.reload(createControllers)
     imp.reload(createJoints)
@@ -263,7 +263,54 @@ def CreateArm(WS_LOC, space_Grps, rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJn
     # constrain arm grp to clavicle 
     pm.parentConstraint(clavicle_Ctrl,arm_GRP, mo = True, w = 1) 
 
+#  ================= Function to create PRNT Switch ==================================== # 
+def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, CTRL_List):
     
+    constraintsList = []
+    CTRL_Ind = CTRL_List.index(str(m_CTRL) + '_offset_GRP')
+    main_CTRL = CTRL_List[CTRL_Ind]
+    
+    main_GRP_Space = pm.group( em=True, name= str(m_CTRL) + '_Space')
+    pm.parent(main_GRP_Space, space_Grps[0])
+    
+    tempConst = pm.parentConstraint(main_CTRL,main_GRP_Space, mo = False, w = 1) 
+    constraintsList.append(tempConst)
+    
+    # ==========    
+    spaceGRPS = []
+    spaceCTRLs = []
+
+    for space in switch_spaces:
+        if space is 'world':
+            sep = '|'
+            GRP_Space = space_Grps[1].split(sep, 1)[1]
+            
+        else:
+            if pm.objExists(str(space) + '_Space') == False:
+                GRP_Space = pm.group( em=True, name= str(space) + '_Space')
+                pm.parent(GRP_Space, space_Grps[0])
+                
+            else: 
+                GRP_Space = pm.select(str(space) + '_Space')
+                
+            
+            ind = CTRL_List.index(str(space) + '_offset_GRP')
+            spaceCTRLs.append(CTRL_List[ind])
+            
+            tempConst = pm.parentConstraint(space, GRP_Space, mo = False, w = 1)     
+            constraintsList.append(tempConst)           
+ 
+        spaceGRPS.append(GRP_Space)
+        
+    # ==========
+    """
+    u'world_LOC_Space', nt.Transform(u'R_arm_IK_CTRL_Space')]
+
+    [nt.Transform(u'R_arm_IK_CTRL_offset_GRP')]
+    """
+    print "______"
+
+   
 # ====================================================================================== #    
 # ====================================================================================== #    
 
@@ -279,31 +326,42 @@ switch_GRP= pm.group( em=True, name= 'IKFK_Switch_GRP' )
 rigging_GRPs.extend([rigging_GRP, ctrl_GRP, skeleton_GRP, vis_GRP, switch_GRP])
 pm.parent(vis_GRP, rigging_GRP)
 
-"""
+
+# ===============
+
+jntRadius = 0.1
+
+# L Arm test
+L_jntList = []
+L_CTRL_List = []
+L_IKJntList = []
+L_FKJntList = []
+
+CreateArm(rigging_GRPs, L_CTRL_List, 'L_', L_jntList, L_IKJntList, L_FKJntList, jntRadius)
+
+# R Arm Test
+R_jntList = []
+R_CTRL_List = []
+R_IKJntList = []
+R_FKJntList = []
+
+CreateArm(rigging_GRPs, R_CTRL_List, 'R_', R_jntList, R_IKJntList, R_FKJntList, jntRadius)
+
+
+# parent switch ========================
 spaceGrps = []
 world_LOC = pm.spaceLocator(n ='worldSpace_LOC')
 
 spaces_GRP = pm.group( em=True, name= 'spaces_GRP')
-world_GRP = pm.group( em=True, name= 'world_Space')
+world_GRP = pm.group( em=True, name= 'world_LOC_Space')
 
-spaceGrps.append(spaces_GRP)
-spaceGrps.append(world_GRP)
-"""
+spaceGrps.extend([spaces_GRP, world_GRP]) 
 
-jntList = []
-CTRL_List = []
-IKJntList = []
-FKJntList = []
-jntRadius = 0.1
+pm.parent(world_GRP, spaces_GRP)
+LOCConst = pm.parentConstraint(world_LOC, world_GRP, mo = False, w=1)
 
-CreateArm('na', 'na', rigging_GRPs, CTRL_List, 'L_', jntList, IKJntList, FKJntList, jntRadius)
+Joint_CTRL_List = []
+Joint_CTRL_List = L_CTRL_List + R_CTRL_List
 
+CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'L_arm_IK_CTRL', ['world', 'R_arm_IK_CTRL'], Joint_CTRL_List)
 
-jntList2 = []
-CTRL_List2 = []
-IKJntList2 = []
-FKJntList2 = []
-jntRadius2 = 0.1
-
-CreateArm('na', 'na', rigging_GRPs, CTRL_List2, 'R_', jntList2, IKJntList2, FKJntList2, jntRadius2)
-    

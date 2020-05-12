@@ -469,24 +469,21 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
     attributes = resultConst.listAttr(s = True)
     weight_len = len(inbetween_CTRL_GRPs)
     
-    print "______________"
-    
     attributes = attributes[::-1]
     weight_Attr = []
     for i in range(weight_len):
         weight_Attr.append(attributes[i])
     
-    print weight_Attr
-
-    """    
     # WORLD CONDITION NODE =========
     
-    # create condition node
+    # create condition node 
+    """ 
     condition_World = pm.shadingNode('condition', n= str(ctrl) + '_condition_node_WORLD', asUtility=True)
     
     # connect switch attr to condition node
     pm.connectAttr(str(ctrl) + '.Parent_Switch', str(condition_World) + '.firstTerm', force = True)
-    
+     
+
     # set connection attr 
     pm.setAttr(str(condition_World) + '.secondTerm', 1)
     pm.setAttr(str(condition_World) + '.colorIfTrueR', 1)
@@ -499,20 +496,22 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
     # connect condition node attr to inbetween constrain
     pm.connectAttr(str(condition_World) + '.outColorR' , str(switch_Constraints_List[1] + '.visibility'), force = True)  
     pm.connectAttr(str(condition_World) + '.outColorG' , str(switch_Constraints_List[1] + '.nodeState'), force = True)    
-    
+       
     # find world weight Attr on result constr
     world_Attr_Ind = -1
-    for inAtt in inbetweenAttr:
-        if "world" in str(inAtt):
-            world_Attr_Ind = inbetweenAttr.index(inAtt)
+    for wAtt in weight_Attr:
+        if "world" in str(wAtt):
+            world_Attr_Ind = weight_Attr.index(wAtt)
     
+     
     if world_Attr_Ind >= 0:      
-        world_Inbetween_Weight_Attr = inbetweenAttr[world_Attr_Ind]
-        inbetweenAttr.remove(world_Inbetween_Weight_Attr)       
+        world_Inbetween_Weight_Attr = weight_Attr[world_Attr_Ind]
+        weight_Attr.remove(world_Inbetween_Weight_Attr)       
     
         # connect condition node attr to result constrain  
         pm.connectAttr(str(condition_World) + '.outColorR' , str(world_Inbetween_Weight_Attr), force = True) 
-        
+          
+    print "______________"
     
     # SPACE CONDITION NODE =========  
     i = 2

@@ -476,47 +476,66 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
     
     # WORLD CONDITION NODE =========
     
-    # create condition node 
-    """ 
-    condition_World = pm.shadingNode('condition', n= str(ctrl) + '_condition_node_WORLD', asUtility=True)
-    
-    # connect switch attr to condition node
-    pm.connectAttr(str(ctrl) + '.Parent_Switch', str(condition_World) + '.firstTerm', force = True)
-     
+    world_Const = "WORLD_" + str(m_CTRL) + "_inbetween_prnt_Constr"
+    world_Ind = -1
+    if world_Const in switch_Constraints_List:
+        world_Ind = switch_Constraints_List.index(world_Const)
 
-    # set connection attr 
-    pm.setAttr(str(condition_World) + '.secondTerm', 1)
-    pm.setAttr(str(condition_World) + '.colorIfTrueR', 1)
-    pm.setAttr(str(condition_World) + '.colorIfTrueG', 0)
-    pm.setAttr(str(condition_World) + '.colorIfTrueB', 0)
-    pm.setAttr(str(condition_World) + '.colorIfFalseR', 0)
-    pm.setAttr(str(condition_World) + '.colorIfFalseG', 10)
-    pm.setAttr(str(condition_World) + '.colorIfFalseB', 0)
-
-    # connect condition node attr to inbetween constrain
-    pm.connectAttr(str(condition_World) + '.outColorR' , str(switch_Constraints_List[1] + '.visibility'), force = True)  
-    pm.connectAttr(str(condition_World) + '.outColorG' , str(switch_Constraints_List[1] + '.nodeState'), force = True)    
-       
-    # find world weight Attr on result constr
-    world_Attr_Ind = -1
-    for wAtt in weight_Attr:
-        if "world" in str(wAtt):
-            world_Attr_Ind = weight_Attr.index(wAtt)
-    
-     
-    if world_Attr_Ind >= 0:      
-        world_Inbetween_Weight_Attr = weight_Attr[world_Attr_Ind]
-        weight_Attr.remove(world_Inbetween_Weight_Attr)       
-    
-        # connect condition node attr to result constrain  
-        pm.connectAttr(str(condition_World) + '.outColorR' , str(world_Inbetween_Weight_Attr), force = True) 
-          
-    print "______________"
-    
-    # SPACE CONDITION NODE =========  
-    i = 2
-    for space in switch_spaces:
+    if world_Ind >= 0:
         
+        # create condition node 
+        condition_World = pm.shadingNode('condition', n= str(ctrl) + '_condition_node_WORLD', asUtility=True)
+    
+        # connect switch attr to condition node
+        pm.connectAttr(str(ctrl) + '.Parent_Switch', str(condition_World) + '.firstTerm', force = True)
+     
+        # set connection attr 
+        pm.setAttr(str(condition_World) + '.secondTerm', 1)
+        pm.setAttr(str(condition_World) + '.colorIfTrueR', 1)
+        pm.setAttr(str(condition_World) + '.colorIfTrueG', 0)
+        pm.setAttr(str(condition_World) + '.colorIfTrueB', 0)
+        pm.setAttr(str(condition_World) + '.colorIfFalseR', 0)
+        pm.setAttr(str(condition_World) + '.colorIfFalseG', 10)    
+        pm.setAttr(str(condition_World) + '.colorIfFalseB', 0)
+ 
+        # connect condition node attr to inbetween constrain
+        pm.connectAttr(str(condition_World) + '.outColorR' , str(switch_Constraints_List[world_Ind] + '.visibility'), force = True)  
+        pm.connectAttr(str(condition_World) + '.outColorG' , str(switch_Constraints_List[world_Ind] + '.nodeState'), force = True)    
+     
+        # find world weight Attr on result constr
+        world_Attr_Ind = -1
+        for wAtt in weight_Attr:
+            if "world" in str(wAtt):
+                world_Attr_Ind = weight_Attr.index(wAtt)
+    
+     
+        if world_Attr_Ind >= 0:      
+            world_Inbetween_Weight_Attr = weight_Attr[world_Attr_Ind]
+            weight_Attr.remove(world_Inbetween_Weight_Attr)       
+    
+            # connect condition node attr to result constrain  
+            pm.connectAttr(str(condition_World) + '.outColorR' , str(world_Inbetween_Weight_Attr), force = True) 
+           
+
+    # SPACE CONDITION NODE =========  
+    for space in switch_spaces:
+       
+        prefix_Space = ''
+        if space[1] is '_':
+            splitString = space.split(ep, 2)
+            prefix_Space = splitString[0] + '_' + splitString[1]
+                  
+        else: 
+            splitString = space.split(ep, 2)
+            prefix_Space = splitString[0] 
+            
+        space_Constr = prefix_Space + '_' + str(m_CTRL) + "_inbetween_prnt_Constr"
+        enum_ind = CTRL_enums.index(prefix_Space)
+        
+        space_Ind = -1
+        if space_Constr in switch_Constraints_List:
+            space_Ind = switch_Constraints_List.index(space_Constr)        
+            
         # create condition node
         condition_Node = pm.shadingNode('condition', n= str(ctrl) + '_condition_node_' + str(space), asUtility=True)
         
@@ -524,7 +543,7 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
         pm.connectAttr(str(ctrl) + '.Parent_Switch', str(condition_Node) + '.firstTerm', force = True)
         
         # set connection attr 
-        pm.setAttr(str(condition_Node) + '.secondTerm', i)
+        pm.setAttr(str(condition_Node) + '.secondTerm', enum_ind)
         pm.setAttr(str(condition_Node) + '.colorIfTrueR', 1)
         pm.setAttr(str(condition_Node) + '.colorIfTrueG', 0)
         pm.setAttr(str(condition_Node) + '.colorIfTrueB', 0)
@@ -532,26 +551,22 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
         pm.setAttr(str(condition_Node) + '.colorIfFalseG', 10)
         pm.setAttr(str(condition_Node) + '.colorIfFalseB', 0)
         
-        # connect condition node attr to inbetween constrain
-        pm.connectAttr(str(condition_Node) + '.outColorR' , str(switch_Constraints_List[i + 1]) + '.visibility', force = True) 
-        pm.connectAttr(str(condition_Node) + '.outColorG' , str(switch_Constraints_List[i + 1]) + '.nodeState', force = True) 
-        
-        # find space weight Attr on result constr
-        node_Attr_Ind = -1
-        for inAtt in inbetweenAttr:
-            if space in str(inAtt):
-                node_Attr_Ind = inbetweenAttr.index(inAtt)
 
-                
-        if node_Attr_Ind >= 0:      
-            space_Inbetween_Weight_Attr = inbetweenAttr[node_Attr_Ind]
-            inbetweenAttr.remove(space_Inbetween_Weight_Attr)               
-           
-            # connect condition node attr to result constrain  
-            pm.connectAttr(str(condition_Node) + '.outColorR' , str(space_Inbetween_Weight_Attr), force = True)  
-     
-        i = i +1
-    """
+        if space_Ind >= 0: 
+            # connect condition node attr to inbetween constrain
+            pm.connectAttr(str(condition_Node) + '.outColorR' , str(switch_Constraints_List[space_Ind]) + '.visibility', force = True) 
+            pm.connectAttr(str(condition_Node) + '.outColorG' , str(switch_Constraints_List[space_Ind]) + '.nodeState', force = True) 
+        
+            # find space weight Attr on result constr
+            node_Attr_Ind = -1
+            for inAtt in weight_Attr:
+                if space in str(inAtt):
+                    node_Attr_Ind = weight_Attr.index(inAtt)
+
+            if node_Attr_Ind >= 0:                
+                # connect condition node attr to result constrain  
+                pm.connectAttr(str(condition_Node) + '.outColorR' , str(weight_Attr[node_Attr_Ind]), force = True)  
+
 
 # ====================================================================================== #    
 # ====================================================================================== #    

@@ -266,7 +266,7 @@ def CreateArm(rigging_GRPs, CTRLs_GRP, prefix, jntList, IKJntList, FKJntList, jn
 #  ================= Function to create PRNT Switch ==================================== # 
 def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, CTRL_List):
     
-    # variables =================================
+    # variables ================================================================
     CTRL_enums = []    
     new_Space_GRPS = []
     new_Space_CTRLs = []
@@ -286,7 +286,7 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
     if str(m_CTRL) + '_Space' in space_Grps:
         m_index = space_Grps.index(str(m_CTRL) + '_Space')
         main_GRP_Space = space_Grps[m_index]
-
+    
     # if group does not exist
     if m_index == -1: 
         m_ctrl_name = str(m_CTRL) + '_Space'
@@ -302,22 +302,12 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
     # Create main CTRL offset GRP
     main_CTRL_Offset = pm.group( em=True, name= str(m_CTRL) + '_Offset')
     pm.parent(main_CTRL_Offset, main_offset_CTRL_GRP)
-    
 
     # move grp to ctrl pos & parent ctrl to it
     tempConst = pm.parentConstraint(main_offset_CTRL_GRP, main_CTRL_Offset, mo = False, w = 1) 
     pm.delete(tempConst) 
       
     pm.parent(m_CTRL, main_CTRL_Offset)
-    
-    """
-    # create inbetween grp
-    CTRL_Space_inbetween = pm.group( em=True, name= str(m_CTRL) + '_Space_inbetween')
-    pm.parent(CTRL_Space_inbetween, main_offset_CTRL_GRP)
-         
-    tempConst = pm.parentConstraint(main_offset_CTRL_GRP, CTRL_Space_inbetween, mo = False, w = 1) 
-    pm.delete(tempConst)
-    """
 
     # add main CTRL to enum
     ep = '_'
@@ -395,9 +385,9 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
      
             pm.parent(GRP_Space, space_Grps[0])
      
-            # constrain to main CTRL
-            space_Const = pm.parentConstraint(space, GRP_Space, n= str(space) + '_space_Parent_Const', mo = False, w = 1) 
-            switch_Constraints_List.append(space_Const) 
+        # constrain to main CTRL
+        space_Const = pm.parentConstraint(space, GRP_Space, n= str(space) + '_space_Parent_Const', mo = False, w = 1) 
+        switch_Constraints_List.append(space_Const) 
             
         new_Space_GRPS.append(GRP_Space)
 
@@ -573,8 +563,6 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
             if node_Attr_Ind >= 0:                
                 # connect condition node attr to result constrain  
                 pm.connectAttr(str(condition_Node) + '.outColorR' , str(weight_Attr[node_Attr_Ind]), force = True)  
-                
-                print "WEIGHT ATTR: " + str(weight_Attr[node_Attr_Ind])
 
 # ====================================================================================== #    
 # ====================================================================================== #    

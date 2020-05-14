@@ -34,6 +34,8 @@ logger = logging.getLogger('AutoRig')
 logger.setLevel(logging.INFO)
 # ====================================================================================== #
 # ====================================================================================== #
+global main_CTRL 
+main_CTRL = ''
 
 # LISTS ==============================================
 global arm_Jnt_List 
@@ -224,7 +226,8 @@ class AutoRig(QtWidgets.QMainWindow):
         addMainCtrl.setFixedWidth(55)
         addMainCtrl.setFixedHeight(20)
         addMainCtrl.move(275,126)
-        #addMainCtrl.clicked.connect(lambda: self.CreateArms())
+
+        addMainCtrl.clicked.connect(lambda: self.AddMainCtrl(prntSwitchMain_CTRL.text(), prntSwitchMain_CTRL))
         
         # add ctrl  =================
         
@@ -242,11 +245,8 @@ class AutoRig(QtWidgets.QMainWindow):
         prntSwitchAdd.setFixedWidth(170)
         prntSwitchAdd.move(95,155)
         
-        # arm creation button 
-        addSwitchCtrlBtn = QtWidgets.QPushButton("Add", parent=self)
-        addSwitchCtrlBtn.setFixedWidth(55)
-        addSwitchCtrlBtn.setFixedHeight(20)
-        addSwitchCtrlBtn.move(275,155)
+        
+        
         
         # Switch CTRLS list =================
         
@@ -267,17 +267,31 @@ class AutoRig(QtWidgets.QMainWindow):
         switchCTRLList.insertItem(0, "Red")
         switchCTRLList.insertItem(0, "Blue")
         
-        # Remove BTN
+        # add CTRL button 
+        addSwitchCtrlBtn = QtWidgets.QPushButton("Add", parent=self)
+        addSwitchCtrlBtn.setFixedWidth(55)
+        addSwitchCtrlBtn.setFixedHeight(20)
+        addSwitchCtrlBtn.move(275,155)
+        
+        addSwitchCtrlBtn.clicked.connect(lambda: self.AddCTRL(prntSwitchAdd.text(), switchCTRLList, prntSwitchAdd))
+        
+        # Remove SEL
         removeSwitchCtrlBtn = QtWidgets.QPushButton("Remove Sel", parent=self)
         removeSwitchCtrlBtn.setFixedWidth(85)
         removeSwitchCtrlBtn.setFixedHeight(30)
         removeSwitchCtrlBtn.move(255,235)
+        
+        removeSwitchCtrlBtn.clicked.connect(lambda: self.RemoveOBJ(switchCTRLList, False))
+        
         
         # Remove BTN
         removeAllSwitchCtrlBtn = QtWidgets.QPushButton("Remove All", parent=self)
         removeAllSwitchCtrlBtn.setFixedWidth(85)
         removeAllSwitchCtrlBtn.setFixedHeight(30)
         removeAllSwitchCtrlBtn.move(255,275)
+        
+        removeAllSwitchCtrlBtn.clicked.connect(lambda: self.RemoveOBJ(switchCTRLList, True))
+        
         
         
         # switch CTRL creation button 
@@ -287,6 +301,9 @@ class AutoRig(QtWidgets.QMainWindow):
         #createArmButton.clicked.connect(lambda: self.CreateArms())
     # ================================ #  
     def CleanLists(self):
+        
+        main_CTRL = ''
+        
         del rigging_GRPs[:]
         
         del arm_Jnt_List[:]
@@ -296,8 +313,61 @@ class AutoRig(QtWidgets.QMainWindow):
         del arm_IK_List[:]
         
         del arm_FK_List[:]
+        
+    # ================================ # 
+    def RemoveOBJ(self, ListItems, all):
+        
+        if all == False:
+            selectedItem = ListItems.selectedItems()
+            currentRow = ListItems.currentRow()
+            
+            # remove current row from list
+            
+        elif all == True: 
+            ListItems.clear()
+            # clear list 
+        
+    # ================================ #  
+    def AddMainCtrl(self, Switch_CTRL_name, qMainCtrlBox):
+        
+        if len(Switch_CTRL_name) > 0:
 
-    
+            shapes = cmds.listRelatives(str(Switch_CTRL_name))  
+            print shapes  
+            if len(shapes) > 0: 
+                if pm.objectType(shapes[0], isType='nurbsCurve'):
+            
+                    splitString = Switch_CTRL_name.split('|', 3)
+            
+                    global main_CTRL 
+                    main_CTRL = splitString[3]
+                    
+                    qMainCtrlBox.setText(main_CTRL) 
+
+    # ================================ #         
+    def AddCTRL(self, CTRL_name, qList, qCtrlBox):       
+        
+        global main_CTRL 
+
+        if len(CTRL_name) > 0:
+            shapes = cmds.listRelatives(str(CTRL_name))  
+            print shapes  
+            if len(shapes) > 0: 
+                if pm.objectType(shapes[0], isType='nurbsCurve'):
+            
+                    splitString = CTRL_name.split('|', 3)
+                    
+                    space_CTRL = splitString[3]
+                    
+                    if str(space_CTRL) != str(main_CTRL):
+                        findItem = qList.findItems(space_CTRL,8) 
+                        if len(findItem) <= 0:
+                            qList.addItem(space_CTRL)
+                            
+                            # add item to list
+        qCtrlBox.clear()
+                            
+                       
     # ================================ #  
     def CreateArms(self, L_ArmCkeckBox, R_ArmCkeckBox):
         
@@ -308,16 +378,12 @@ class AutoRig(QtWidgets.QMainWindow):
         
         global arm_IK_List
         global arm_FK_List
-        
-        print
-        print "CREATE ARMS"
-        
+            
         # create Basic rigging grps if not present
         if len(rigging_GRPs) <= 0:
             CreateBasicGrps()
             
-        jntRadius = 0.1
-        
+        jntRadius = 0.1       
         relatives = pm.listRelatives(rigging_GRPs)
         
         # create L Arm

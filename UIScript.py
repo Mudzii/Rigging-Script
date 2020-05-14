@@ -134,7 +134,7 @@ class AutoRig(QtWidgets.QMainWindow):
                        
     # ================================ #   
     def BuildUI(self):
-        
+   
         #mainLayout = QtWidgets.QGridLayout() 
         
         # Arm Rig Creation ========================================
@@ -223,8 +223,7 @@ class AutoRig(QtWidgets.QMainWindow):
         prntSwitchAdd.setFixedWidth(170)
         prntSwitchAdd.move(95,155)
         
-        
-        
+
         
         # Switch CTRLS list =================
         
@@ -279,6 +278,8 @@ class AutoRig(QtWidgets.QMainWindow):
     # ================================ #  
     def CleanLists(self):
         
+        imp.reload(armRig)
+                
         main_CTRL = ''
         
         del rigging_GRPs[:]
@@ -311,10 +312,7 @@ class AutoRig(QtWidgets.QMainWindow):
             
     # ================================ #         
     def CreateParentSwitch(self, m_CTRL, ctrl_List):   
-        
-        print
-        print "Create Parent switch"
-        
+
         global switch_CTRL_List
         global LOCinfo
         
@@ -327,10 +325,8 @@ class AutoRig(QtWidgets.QMainWindow):
         itemCount = ctrl_List.count()
         for i in range(itemCount):
             switch_CTRL_List.append(ctrl_List.item(i).text())
-        
-  
-        
-        
+
+
         #CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'R_arm_IK_CTRL', ['world_LOC', 'L_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
         armRig.CreateSpaceSwitch(spaceGrps, LOCinfo[0], LOCinfo[1], str(main_CTRL), switch_CTRL_List, arm_CTRL_List)
         

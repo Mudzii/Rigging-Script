@@ -181,6 +181,25 @@ class AutoRig(QtWidgets.QMainWindow):
     
         switchCTRLList.insertItem(0, "Red")
         switchCTRLList.insertItem(0, "Blue")
+        
+        # Remove BTN
+        removeSwitchCtrlBtn = QtWidgets.QPushButton("Remove Sel", parent=self)
+        removeSwitchCtrlBtn.setFixedWidth(85)
+        removeSwitchCtrlBtn.setFixedHeight(30)
+        removeSwitchCtrlBtn.move(255,235)
+        
+        # Remove BTN
+        removeAllSwitchCtrlBtn = QtWidgets.QPushButton("Remove All", parent=self)
+        removeAllSwitchCtrlBtn.setFixedWidth(85)
+        removeAllSwitchCtrlBtn.setFixedHeight(30)
+        removeAllSwitchCtrlBtn.move(255,275)
+        
+        
+        # switch CTRL creation button 
+        createSwitchButton = QtWidgets.QPushButton("Create Parent Switch", parent=self)
+        createSwitchButton.setFixedWidth(120)
+        createSwitchButton.move(100,350)
+        #createArmButton.clicked.connect(lambda: self.CreateArms())
 
 
     def CreateArms(self):

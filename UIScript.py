@@ -114,7 +114,7 @@ class AutoRig(QtWidgets.QMainWindow):
         prntSwitchText.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         prntSwitchText.setFixedHeight(50)
         prntSwitchText.setFixedWidth(250)
-        prntSwitchText.move(5,140)
+        prntSwitchText.move(5,100)
         prntSwitchText.setFont(QtGui.QFont('MS Sans Serif', 11, QtGui.QFont.Bold))
         
         # add main ctrl =================
@@ -124,7 +124,7 @@ class AutoRig(QtWidgets.QMainWindow):
         textMainCTRL.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         textMainCTRL.setFixedHeight(50)
         textMainCTRL.setFixedWidth(60)
-        textMainCTRL.move(5,170)
+        textMainCTRL.move(5,130)
         
         # 
         prntSwitchMain_CTRL = self.currentDirTxt = QtWidgets.QLineEdit(parent=self)
@@ -132,13 +132,13 @@ class AutoRig(QtWidgets.QMainWindow):
         #prntSwitchAdd.returnPressed.connect(lambda: self.LoadMesh(col_mesh_view.text()))
         prntSwitchMain_CTRL.setFixedHeight(20)
         prntSwitchMain_CTRL.setFixedWidth(200)
-        prntSwitchMain_CTRL.move(65,165)
+        prntSwitchMain_CTRL.move(65,126)
         
         # arm creation button 
         addMainCtrl = QtWidgets.QPushButton("Select", parent=self)
         addMainCtrl.setFixedWidth(55)
         addMainCtrl.setFixedHeight(20)
-        addMainCtrl.move(275,164)
+        addMainCtrl.move(275,126)
         #addMainCtrl.clicked.connect(lambda: self.CreateArms())
         
         # add ctrl  =================
@@ -148,34 +148,34 @@ class AutoRig(QtWidgets.QMainWindow):
         textAddCTRL.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         textAddCTRL.setFixedHeight(50)
         textAddCTRL.setFixedWidth(100)
-        textAddCTRL.move(5,200)
+        textAddCTRL.move(5,160)
         
         prntSwitchAdd = self.currentDirTxt = QtWidgets.QLineEdit(parent=self)
         prntSwitchAdd.setStyleSheet("border: 1px groove black; border-radius: 4px;")
         #prntSwitchAdd.returnPressed.connect(lambda: self.LoadMesh(col_mesh_view.text()))
         prntSwitchAdd.setFixedHeight(20)
         prntSwitchAdd.setFixedWidth(170)
-        prntSwitchAdd.move(95,195)
+        prntSwitchAdd.move(95,155)
         
         # arm creation button 
         addSwitchCtrlBtn = QtWidgets.QPushButton("Add", parent=self)
         addSwitchCtrlBtn.setFixedWidth(55)
         addSwitchCtrlBtn.setFixedHeight(20)
-        addSwitchCtrlBtn.move(275,194)
+        addSwitchCtrlBtn.move(275,155)
         
         # Switch CTRLS list =================
         
         # label
-        textCTLRList = QtWidgets.QLabel("Added switch CTRLs", parent=self)
+        textCTLRList = QtWidgets.QLabel("Added switch CTRLs:", parent=self)
         textCTLRList.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         textCTLRList.setFixedHeight(50)
         textCTLRList.setFixedWidth(240)
-        textCTLRList.move(5,230)
+        textCTLRList.move(5,190)
         
         # list widget 
         switchCTRLList = QtWidgets.QListWidget(parent=self)
         
-        switchCTRLList.move(5,245)
+        switchCTRLList.move(5,210)
         switchCTRLList.setFixedWidth(240)
         switchCTRLList.setFixedHeight(120)
     

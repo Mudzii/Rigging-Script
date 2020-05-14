@@ -328,7 +328,11 @@ class AutoRig(QtWidgets.QMainWindow):
         for i in range(itemCount):
             switch_CTRL_List.append(ctrl_List.item(i).text())
         
-        #armRig.CreateSpaceSwitch(spaceGrps, LOCinfo[0], LOCinfo[1], str(main_CTRL), switch_CTRL_List, arm_CTRL_List)
+  
+        
+        
+        #CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'R_arm_IK_CTRL', ['world_LOC', 'L_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
+        armRig.CreateSpaceSwitch(spaceGrps, LOCinfo[0], LOCinfo[1], str(main_CTRL), switch_CTRL_List, arm_CTRL_List)
         
     # ================================ #  
     def AddMainCtrl(self, Switch_CTRL_name, qMainCtrlBox):

@@ -10,7 +10,7 @@ path = r'D:\00.Documents\03. Scripting and Programming\Maya Scripts'
 if path not in sys.path:
     sys.path.append(path)
     
-#import armRig
+import armRig
 
 # Qt
 try:
@@ -25,7 +25,8 @@ except ImportError:
     from PySide2.QtUiTools import *
     from shiboken2 import wrapInstance 
     QtWidgets = QtGui
-    
+
+# logger    
 import logging
 
 logging.basicConfig()
@@ -34,6 +35,88 @@ logger.setLevel(logging.INFO)
 # ====================================================================================== #
 # ====================================================================================== #
 
+# LISTS ==============================================
+global arm_Jnt_List 
+arm_Jnt_List = []
+    
+global arm_CTRL_List
+arm_CTRL_List = []
+    
+global arm_IK_List
+arm_IK_List = []
+    
+global arm_FK_List
+arm_FK_List = []
+    
+global rigging_GRPs 
+rigging_GRPs = []
+# ====================================================================================== #
+
+def CreateBasicGrps():
+    
+    # Rigging GRPS ======================================
+    
+    rigging_GRP = pm.group( em=True, name= 'rigging_GRP' )
+    ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
+    skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
+    vis_GRP= pm.group( em=True, name= 'vis_aid' )
+    switch_GRP= pm.group( em=True, name= 'IKFK_Switch_GRP' )
+
+    rigging_GRPs.extend([rigging_GRP, ctrl_GRP, skeleton_GRP, vis_GRP, switch_GRP])
+    pm.parent(vis_GRP, rigging_GRP)
+    
+    """
+    # ===============
+    CreateBasicGrps
+    jntRadius = 0.1
+    
+    # L Arm test
+    L_jntList = []
+    L_CTRL_List = []
+    L_IKJntList = []
+    L_FKJntList = []
+    
+    CreateArm(rigging_GRPs, L_CTRL_List, 'L_', L_jntList, L_IKJntList, L_FKJntList, jntRadius)
+    
+    # R Arm Test
+    R_jntList = []
+    R_CTRL_List = []
+    R_IKJntList = []
+    R_FKJntList = []
+    
+    CreateArm(rigging_GRPs, R_CTRL_List, 'R_', R_jntList, R_IKJntList, R_FKJntList, jntRadius)
+    """ 
+# ====================================================================================== #   
+def CreateSpaceGrps(): 
+   
+    # Locator and spaces switch ========================
+    global spaceGrps 
+    spaceGrps = []
+    
+    world_LOC = pm.spaceLocator(n ='world_LOC')
+    
+    
+    spaces_GRP = pm.group( em=True, name= 'spaces_GRP')
+    world_GRP = pm.group( em=True, name= 'world_LOC_Space')
+    
+    spaceGrps.extend([spaces_GRP, world_GRP])
+    
+    pm.parent(world_GRP, spaces_GRP)
+    LOCConst = pm.parentConstraint(world_LOC, world_GRP, mo = False, w=1)
+    
+    """
+    CreateSpaceGrps():
+    Joint_CTRL_List = []
+    Joint_CTRL_List = L_CTRL_List + R_CTRL_List
+    
+    # ========= 
+    CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'R_arm_IK_CTRL', ['world_LOC', 'L_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
+    CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'L_arm_IK_CTRL', ['world_LOC', 'R_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
+    
+    """
+
+
+# ====================================================================================== #
 class AutoRig(QtWidgets.QMainWindow):
     # ================================ #
     def __init__(self):
@@ -41,14 +124,16 @@ class AutoRig(QtWidgets.QMainWindow):
         
         global windowName 
         windowName = 'AutoRig'
-        
+            
         # Delete window if it already exists
         if cmds.window(windowName, exists=True):
             self.CloseWindow(windowName)
         else:
             logger.debug('No previous UI exists')
             pass
-            
+        
+        self.CleanLists()
+           
         # Get Maya window and parent the controller to it
         mayaMainWindow = {o.objectName(): o for o in QtWidgets.qApp.topLevelWidgets()}["MayaWindow"]
         self.setParent(mayaMainWindow)
@@ -98,7 +183,7 @@ class AutoRig(QtWidgets.QMainWindow):
         createArmButton = QtWidgets.QPushButton("Create Arm rig", parent=self)
         createArmButton.setFixedWidth(100)
         createArmButton.move(190,36)
-        createArmButton.clicked.connect(lambda: self.CreateArms())
+        createArmButton.clicked.connect(lambda: self.CreateArms(create_L_ArmCkeckBox, create_R_ArmCkeckBox))
         
         # divider
         divider = QtWidgets.QFrame(parent=self)
@@ -200,10 +285,74 @@ class AutoRig(QtWidgets.QMainWindow):
         createSwitchButton.setFixedWidth(120)
         createSwitchButton.move(100,350)
         #createArmButton.clicked.connect(lambda: self.CreateArms())
+    # ================================ #  
+    def CleanLists(self):
+        del rigging_GRPs[:]
+        
+        del arm_Jnt_List[:]
+        
+        del arm_CTRL_List[:]
+    
+        del arm_IK_List[:]
+        
+        del arm_FK_List[:]
 
+    
+    # ================================ #  
+    def CreateArms(self, L_ArmCkeckBox, R_ArmCkeckBox):
+        
+        global rigging_GRPs
+         
+        global arm_Jnt_List 
+        global arm_CTRL_List
+        
+        global arm_IK_List
+        global arm_FK_List
+        
+        print
+        print "CREATE ARMS"
+        
+        # create Basic rigging grps if not present
+        if len(rigging_GRPs) <= 0:
+            CreateBasicGrps()
+            
+        jntRadius = 0.1
+        
+        relatives = pm.listRelatives(rigging_GRPs)
+        
+        # create L Arm
+        if L_ArmCkeckBox. isChecked() == True: 
+            if 'L_arm_GRP' not in relatives:
+                L_jntList = []
+                L_CTRL_List = []
+                L_IKJntList = []
+                L_FKJntList = []
+                
+                armRig.CreateArm(rigging_GRPs, L_CTRL_List, 'L_', L_jntList, L_IKJntList, L_FKJntList, jntRadius)
+                
+                arm_Jnt_List = arm_Jnt_List + L_jntList
+                arm_IK_List = arm_IK_List + L_IKJntList
+                arm_FK_List = arm_FK_List + L_FKJntList
+                
+                arm_CTRL_List = arm_CTRL_List + L_CTRL_List
+                
+                
+        # create R Arm    
+        if R_ArmCkeckBox. isChecked() == True: 
+            if 'R_arm_GRP' not in relatives:
+                R_jntList = []
+                R_CTRL_List = []
+                R_IKJntList = []
+                R_FKJntList = []
+                
+                armRig.CreateArm(rigging_GRPs, R_CTRL_List, 'R_', R_jntList, R_IKJntList, R_FKJntList, jntRadius)     
+                
+                arm_Jnt_List = arm_Jnt_List + R_jntList
+                arm_IK_List = arm_IK_List + R_IKJntList
+                arm_FK_List = arm_FK_List + R_FKJntList
+                
+                arm_CTRL_List = arm_CTRL_List + R_CTRL_List
 
-    def CreateArms(self):
-        print "CREATE ARMS"        
         
 # ======================================================================================= # 
 win = AutoRig()

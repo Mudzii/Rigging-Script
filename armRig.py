@@ -504,15 +504,15 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
             # connect condition node attr to result constrain  
             pm.connectAttr(str(condition_World) + '.outColorR' , str(world_Inbetween_Weight_Attr), force = True) 
    
-    """    
-       
+
     # SPACE CONDITION NODE =========  
     for space in switch_spaces:
-          
+        
+         
         # get space prefix
         prefix_Space = ''
         enum_ind = -1
-        if space[1] is '_':
+        if space[1] == '_':
             splitString = space.split(ep, 2)
             prefix_Space = splitString[0] + '_' + splitString[1] 
             enum_ind = CTRL_enums.index(prefix_Space)
@@ -525,13 +525,15 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
             enum_ind = CTRL_enums.index(prefix_Space)
             
             prefix_Space = prefix_Space + '_' + splitString[1] 
-
+        
         # get index    
         space_Constr = prefix_Space + '_' + str(m_CTRL) + "_inbetween_prnt_Constr"
-
+        
         space_Ind = -1
         if space_Constr in switch_Constraints_List:
             space_Ind = switch_Constraints_List.index(space_Constr)   
+        
+        
         
         if space_Ind >= 0: 
              
@@ -551,7 +553,7 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
             pm.setAttr(str(condition_Node) + '.colorIfFalseG', 10)
             pm.setAttr(str(condition_Node) + '.colorIfFalseB', 0)
         
- 
+             
             # connect condition node attr to inbetween constrain
             pm.connectAttr(str(condition_Node) + '.outColorR' , str(switch_Constraints_List[space_Ind]) + '.visibility', force = True) 
             pm.connectAttr(str(condition_Node) + '.outColorG' , str(switch_Constraints_List[space_Ind]) + '.nodeState', force = True) 
@@ -566,64 +568,5 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
             if node_Attr_Ind >= 0:                
                 # connect condition node attr to result constrain  
                 pm.connectAttr(str(condition_Node) + '.outColorR' , str(weight_Attr[node_Attr_Ind]), force = True)  
-        """
 # ====================================================================================== #    
 # ====================================================================================== #    
-
-"""
-rigging_GRPs = []
-
-rigging_GRP = pm.group( em=True, name= 'rigging_GRP' )
-ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
-skeleton_GRP = pm.group( em=True, name= 'skeleton_GRP' )
-vis_GRP= pm.group( em=True, name= 'vis_aid' )
-switch_GRP= pm.group( em=True, name= 'IKFK_Switch_GRP' )
-
-rigging_GRPs.extend([rigging_GRP, ctrl_GRP, skeleton_GRP, vis_GRP, switch_GRP])
-pm.parent(vis_GRP, rigging_GRP)
-
-
-# ===============
-
-jntRadius = 0.1
-
-# L Arm test
-L_jntList = []
-L_CTRL_List = []
-L_IKJntList = []
-L_FKJntList = []
-
-CreateArm(rigging_GRPs, L_CTRL_List, 'L_', L_jntList, L_IKJntList, L_FKJntList, jntRadius)
-
-# R Arm Test
-R_jntList = []
-R_CTRL_List = []
-R_IKJntList = []
-R_FKJntList = []
-
-CreateArm(rigging_GRPs, R_CTRL_List, 'R_', R_jntList, R_IKJntList, R_FKJntList, jntRadius)
-
-
-# parent switch ========================
-spaceGrps = []
-
-world_LOC = pm.spaceLocator(n ='world_LOC')
-#world_LOC = 'world_LOC'
-
-
-spaces_GRP = pm.group( em=True, name= 'spaces_GRP')
-world_GRP = pm.group( em=True, name= 'world_LOC_Space')
-
-spaceGrps.extend([spaces_GRP, world_GRP])
-
-pm.parent(world_GRP, spaces_GRP)
-LOCConst = pm.parentConstraint(world_LOC, world_GRP, mo = False, w=1)
-
-Joint_CTRL_List = []
-Joint_CTRL_List = L_CTRL_List + R_CTRL_List
-
-# ========= 
-CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'R_arm_IK_CTRL', ['world_LOC', 'L_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
-CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'L_arm_IK_CTRL', ['world_LOC', 'R_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
-"""
-

@@ -84,40 +84,47 @@ class AutoRig(QtWidgets.QMainWindow):
 
         # Check box L Arm
         create_L_ArmCkeckBox = QtWidgets.QCheckBox("Create Left Arm",parent=self)
-        create_L_ArmCkeckBox.move(15,30)
+        create_L_ArmCkeckBox.move(35,30)
         create_L_ArmCkeckBox.setFixedHeight(24)
         create_L_ArmCkeckBox.setFixedWidth(250)
         
         # Check box R Arm
         create_R_ArmCkeckBox = QtWidgets.QCheckBox("Create Right Arm",parent=self)
-        create_R_ArmCkeckBox.move(15,50)
+        create_R_ArmCkeckBox.move(35,50)
         create_R_ArmCkeckBox.setFixedHeight(24)
         create_R_ArmCkeckBox.setFixedWidth(250)
         
         # arm creation button 
         createArmButton = QtWidgets.QPushButton("Create Arm rig", parent=self)
         createArmButton.setFixedWidth(100)
-        createArmButton.move(125,90)
+        createArmButton.move(190,36)
         createArmButton.clicked.connect(lambda: self.CreateArms())
+        
+        # divider
+        divider = QtWidgets.QFrame(parent=self)
+        divider.setFrameShape(QtWidgets.QFrame.HLine)
+        divider.setFixedWidth(340)
+        divider.setLineWidth(2)
+        divider.move(5,75)
         
         # Arm Prnt switch Creation ====================================
                 
         # Arm label
-        textArm = QtWidgets.QLabel("Create Parent Switch", parent=self)
-        textArm.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        textArm.setFixedHeight(50)
-        textArm.setFixedWidth(250)
-        textArm.move(5,140)
-        textArm.setFont(QtGui.QFont('MS Sans Serif', 11, QtGui.QFont.Bold))
+        prntSwitchText = QtWidgets.QLabel("Create Parent Switch", parent=self)
+        prntSwitchText.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        prntSwitchText.setFixedHeight(50)
+        prntSwitchText.setFixedWidth(250)
+        prntSwitchText.move(5,140)
+        prntSwitchText.setFont(QtGui.QFont('MS Sans Serif', 11, QtGui.QFont.Bold))
         
-        # add main ctrl =====
+        # add main ctrl =================
         
         # Arm label
-        textArm = QtWidgets.QLabel("Main CTRL", parent=self)
-        textArm.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        textArm.setFixedHeight(50)
-        textArm.setFixedWidth(60)
-        textArm.move(5,170)
+        textMainCTRL = QtWidgets.QLabel("Main CTRL", parent=self)
+        textMainCTRL.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        textMainCTRL.setFixedHeight(50)
+        textMainCTRL.setFixedWidth(60)
+        textMainCTRL.move(5,170)
         
         # 
         prntSwitchMain_CTRL = self.currentDirTxt = QtWidgets.QLineEdit(parent=self)
@@ -134,20 +141,46 @@ class AutoRig(QtWidgets.QMainWindow):
         addMainCtrl.move(275,164)
         #addMainCtrl.clicked.connect(lambda: self.CreateArms())
         
-        # add ctrl =====
+        # add ctrl  =================
+        
+        # Arm label
+        textAddCTRL = QtWidgets.QLabel("Add Switch CTRL", parent=self)
+        textAddCTRL.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        textAddCTRL.setFixedHeight(50)
+        textAddCTRL.setFixedWidth(100)
+        textAddCTRL.move(5,200)
+        
         prntSwitchAdd = self.currentDirTxt = QtWidgets.QLineEdit(parent=self)
         prntSwitchAdd.setStyleSheet("border: 1px groove black; border-radius: 4px;")
         #prntSwitchAdd.returnPressed.connect(lambda: self.LoadMesh(col_mesh_view.text()))
         prntSwitchAdd.setFixedHeight(20)
-        prntSwitchAdd.setFixedWidth(250)
-        prntSwitchAdd.move(5,210)
+        prntSwitchAdd.setFixedWidth(170)
+        prntSwitchAdd.move(95,195)
         
-        # 
-        """
-        listW = QtWidgets.QListWidget(parent=self)
-        listW.setFixedWidth(340)
-        listW.move(5,170)
-        """
+        # arm creation button 
+        addSwitchCtrlBtn = QtWidgets.QPushButton("Add", parent=self)
+        addSwitchCtrlBtn.setFixedWidth(55)
+        addSwitchCtrlBtn.setFixedHeight(20)
+        addSwitchCtrlBtn.move(275,194)
+        
+        # Switch CTRLS list =================
+        
+        # label
+        textCTLRList = QtWidgets.QLabel("Added switch CTRLs", parent=self)
+        textCTLRList.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        textCTLRList.setFixedHeight(50)
+        textCTLRList.setFixedWidth(240)
+        textCTLRList.move(5,230)
+        
+        # list widget 
+        switchCTRLList = QtWidgets.QListWidget(parent=self)
+        
+        switchCTRLList.move(5,245)
+        switchCTRLList.setFixedWidth(240)
+        switchCTRLList.setFixedHeight(120)
+    
+        switchCTRLList.insertItem(0, "Red")
+        switchCTRLList.insertItem(0, "Blue")
 
 
     def CreateArms(self):

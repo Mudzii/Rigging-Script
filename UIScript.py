@@ -310,6 +310,18 @@ class AutoRig(QtWidgets.QMainWindow):
         elif all == True: 
             ListItems.clear()
             
+    # ================================ #
+    def ResetParentSwitch(self, m_CTRL, ctrl_List):   
+        
+        global main_CTRL
+        global switch_CTRL_List
+        
+        main_CTRL = ''
+        del switch_CTRL_List[:]
+        
+        m_CTRL.clear()
+        ctrl_List.clear()
+          
     # ================================ #         
     def CreateParentSwitch(self, m_CTRL, ctrl_List):   
 
@@ -325,10 +337,11 @@ class AutoRig(QtWidgets.QMainWindow):
         itemCount = ctrl_List.count()
         for i in range(itemCount):
             switch_CTRL_List.append(ctrl_List.item(i).text())
-
-
-        #CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'R_arm_IK_CTRL', ['world_LOC', 'L_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
+            
         armRig.CreateSpaceSwitch(spaceGrps, LOCinfo[0], LOCinfo[1], str(main_CTRL), switch_CTRL_List, arm_CTRL_List)
+        
+        self.ResetParentSwitch(m_CTRL, ctrl_List)
+        
         
     # ================================ #  
     def AddMainCtrl(self, Switch_CTRL_name, qMainCtrlBox):
@@ -371,7 +384,7 @@ class AutoRig(QtWidgets.QMainWindow):
                 if pm.objectType(shapes[0], isType='nurbsCurve'):
                     
                     space_CTRL = ''
-                    splitString = CTRL_name.split('|', 3)
+                    splitString = CTRL_name.split('|', 5)
                     
                     length = len(splitString)
                     space_CTRL = splitString[length - 1] 

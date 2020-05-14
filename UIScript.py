@@ -37,6 +37,14 @@ logger.setLevel(logging.INFO)
 global main_CTRL 
 main_CTRL = ''
 
+global switch_CTRL_List
+switch_CTRL_List = []
+
+global spaceGrps 
+spaceGrps = []
+
+global LOCinfo 
+LOCinfo = []
 # LISTS ==============================================
 global arm_Jnt_List 
 arm_Jnt_List = []
@@ -52,11 +60,13 @@ arm_FK_List = []
     
 global rigging_GRPs 
 rigging_GRPs = []
+
 # ====================================================================================== #
 
 def CreateBasicGrps():
     
     # Rigging GRPS ======================================
+    global rigging_GRPs 
     
     rigging_GRP = pm.group( em=True, name= 'rigging_GRP' )
     ctrl_GRP = pm.group( em=True, name= 'controllers_GRP' )
@@ -67,36 +77,13 @@ def CreateBasicGrps():
     rigging_GRPs.extend([rigging_GRP, ctrl_GRP, skeleton_GRP, vis_GRP, switch_GRP])
     pm.parent(vis_GRP, rigging_GRP)
     
-    """
-    # ===============
-    CreateBasicGrps
-    jntRadius = 0.1
-    
-    # L Arm test
-    L_jntList = []
-    L_CTRL_List = []
-    L_IKJntList = []
-    L_FKJntList = []
-    
-    CreateArm(rigging_GRPs, L_CTRL_List, 'L_', L_jntList, L_IKJntList, L_FKJntList, jntRadius)
-    
-    # R Arm Test
-    R_jntList = []
-    R_CTRL_List = []
-    R_IKJntList = []
-    R_FKJntList = []
-    
-    CreateArm(rigging_GRPs, R_CTRL_List, 'R_', R_jntList, R_IKJntList, R_FKJntList, jntRadius)
-    """ 
 # ====================================================================================== #   
 def CreateSpaceGrps(): 
    
     # Locator and spaces switch ========================
     global spaceGrps 
-    spaceGrps = []
     
     world_LOC = pm.spaceLocator(n ='world_LOC')
-    
     
     spaces_GRP = pm.group( em=True, name= 'spaces_GRP')
     world_GRP = pm.group( em=True, name= 'world_LOC_Space')
@@ -106,16 +93,7 @@ def CreateSpaceGrps():
     pm.parent(world_GRP, spaces_GRP)
     LOCConst = pm.parentConstraint(world_LOC, world_GRP, mo = False, w=1)
     
-    """
-    CreateSpaceGrps():
-    Joint_CTRL_List = []
-    Joint_CTRL_List = L_CTRL_List + R_CTRL_List
-    
-    # ========= 
-    CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'R_arm_IK_CTRL', ['world_LOC', 'L_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
-    CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'L_arm_IK_CTRL', ['world_LOC', 'R_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
-    
-    """
+    LOCinfo.extend([world_LOC, LOCConst])
 
 
 # ====================================================================================== #
@@ -292,13 +270,14 @@ class AutoRig(QtWidgets.QMainWindow):
         
         removeAllSwitchCtrlBtn.clicked.connect(lambda: self.RemoveOBJ(switchCTRLList, True))
         
-        
-        
+
         # switch CTRL creation button 
         createSwitchButton = QtWidgets.QPushButton("Create Parent Switch", parent=self)
         createSwitchButton.setFixedWidth(120)
         createSwitchButton.move(100,350)
-        #createArmButton.clicked.connect(lambda: self.CreateArms())
+        
+        createSwitchButton.clicked.connect(lambda: self.CreateParentSwitch(prntSwitchMain_CTRL, switchCTRLList))
+   
     # ================================ #  
     def CleanLists(self):
         
@@ -314,6 +293,11 @@ class AutoRig(QtWidgets.QMainWindow):
         
         del arm_FK_List[:]
         
+        del switch_CTRL_List[:]
+        
+        del spaceGrps[:]
+        
+        del LOCinfo[:]
     # ================================ # 
     def RemoveOBJ(self, ListItems, all):
         
@@ -326,6 +310,26 @@ class AutoRig(QtWidgets.QMainWindow):
         elif all == True: 
             ListItems.clear()
             # clear list 
+            
+    # ================================ #         
+    def CreateParentSwitch(self, m_CTRL, ctrl_List):   
+        
+        print
+        print "Create Parent switch"
+        
+        global switch_CTRL_List
+        
+        global main_CTRL
+        global arm_CTRL_List
+        global spaceGrps
+        
+
+        
+        itemCount = ctrl_List.count()
+        for i in range(itemCount):
+            switch_CTRL_List.append(ctrl_List.item(i).text())
+        
+        armRig.CreateSpaceSwitch(spaceGrps, LOCinfo[0], LOCinfo[1], main_CTRL, switch_CTRL_List, arm_CTRL_List)
         
     # ================================ #  
     def AddMainCtrl(self, Switch_CTRL_name, qMainCtrlBox):
@@ -336,7 +340,7 @@ class AutoRig(QtWidgets.QMainWindow):
             print shapes  
             if len(shapes) > 0: 
                 if pm.objectType(shapes[0], isType='nurbsCurve'):
-            
+                    
                     splitString = Switch_CTRL_name.split('|', 3)
             
                     global main_CTRL 
@@ -351,20 +355,23 @@ class AutoRig(QtWidgets.QMainWindow):
 
         if len(CTRL_name) > 0:
             shapes = cmds.listRelatives(str(CTRL_name))  
-            print shapes  
+
             if len(shapes) > 0: 
-                if pm.objectType(shapes[0], isType='nurbsCurve'):
-            
+                if pm.objectType(shapes[0], isType='nurbsCurve') or pm.objectType(shapes[0], isType='locator'):
+                    
+                    space_CTRL = ''
                     splitString = CTRL_name.split('|', 3)
                     
-                    space_CTRL = splitString[3]
-                    
+                    if shapes[0][1] == '_':
+                        space_CTRL = splitString[3] 
+                        
+                    else:  
+                        space_CTRL = splitString[1]
+
                     if str(space_CTRL) != str(main_CTRL):
                         findItem = qList.findItems(space_CTRL,8) 
                         if len(findItem) <= 0:
                             qList.addItem(space_CTRL)
-                            
-                            # add item to list
         qCtrlBox.clear()
                             
                        
@@ -372,6 +379,7 @@ class AutoRig(QtWidgets.QMainWindow):
     def CreateArms(self, L_ArmCkeckBox, R_ArmCkeckBox):
         
         global rigging_GRPs
+        global spaceGrps 
          
         global arm_Jnt_List 
         global arm_CTRL_List
@@ -382,7 +390,10 @@ class AutoRig(QtWidgets.QMainWindow):
         # create Basic rigging grps if not present
         if len(rigging_GRPs) <= 0:
             CreateBasicGrps()
-            
+        
+        if len(spaceGrps) <= 0:
+            CreateSpaceGrps()   
+             
         jntRadius = 0.1       
         relatives = pm.listRelatives(rigging_GRPs)
         

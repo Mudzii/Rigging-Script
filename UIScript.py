@@ -241,9 +241,7 @@ class AutoRig(QtWidgets.QMainWindow):
         switchCTRLList.move(5,210)
         switchCTRLList.setFixedWidth(240)
         switchCTRLList.setFixedHeight(120)
-    
-        switchCTRLList.insertItem(0, "Red")
-        switchCTRLList.insertItem(0, "Blue")
+
         
         # add CTRL button 
         addSwitchCtrlBtn = QtWidgets.QPushButton("Add", parent=self)
@@ -298,18 +296,18 @@ class AutoRig(QtWidgets.QMainWindow):
         del spaceGrps[:]
         
         del LOCinfo[:]
+        
     # ================================ # 
     def RemoveOBJ(self, ListItems, all):
         
         if all == False:
             selectedItem = ListItems.selectedItems()
             currentRow = ListItems.currentRow()
-            
-            # remove current row from list
+            ListItems.takeItem(currentRow)
+
             
         elif all == True: 
             ListItems.clear()
-            # clear list 
             
     # ================================ #         
     def CreateParentSwitch(self, m_CTRL, ctrl_List):   
@@ -323,7 +321,6 @@ class AutoRig(QtWidgets.QMainWindow):
         global arm_CTRL_List
         global spaceGrps
         
-
         
         itemCount = ctrl_List.count()
         for i in range(itemCount):

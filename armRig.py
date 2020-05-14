@@ -311,18 +311,20 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
 
     # add main CTRL to enum
     ep = '_'
-  
+    CTRL_enums.append(m_CTRL)
+    """
     if m_CTRL[1] is '_':
         splitString = m_CTRL.split(ep, 2)
         enum = splitString[0] + '_' + splitString[1]
         CTRL_enums.append(enum)
+            
         
     else: 
         splitString = m_CTRL.split(ep, 2)
         enum = splitString[0] 
         CTRL_enums.append(enum)
-    
-
+    """
+          
 
     # WORLD ctrl ==================================================      
     world_Ind = -1
@@ -391,9 +393,10 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
             
         new_Space_GRPS.append(GRP_Space)
 
-
+        CTRL_enums.append(space)
+        """
         # add CTRL to enum
-        if space[1] is '_':
+        if space[0] is 'R' or space[0] is 'L':
             splitString = space.split(ep, 2)
             enum = splitString[0] + '_' + splitString[1]
             CTRL_enums.append(enum)
@@ -402,8 +405,8 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
             splitString = space.split(ep, 2)
             enum = splitString[0] 
             CTRL_enums.append(enum) 
-         
-        
+
+        """
         # create offset grp in space grp ======      
         space_mCTRL_Space = pm.group( em=True, name= str(enum) + '_' + str(m_CTRL) + '_Space')
         pm.parent(space_mCTRL_Space, GRP_Space)
@@ -429,7 +432,6 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
         spaceConst = pm.parentConstraint(space_mCTRL_Space, space_inbetween, n = str(space) + '_' + str(m_CTRL) + '_inbetween_prnt_Constr', mo = False, w = 1)
         switch_Constraints_List.append(spaceConst) 
         
-   
         
     # Create Parent switch ==========
     
@@ -567,7 +569,7 @@ def CreateSpaceSwitch(space_Grps, World_LOC, LOC_Const, m_CTRL, switch_spaces, C
 # ====================================================================================== #    
 # ====================================================================================== #    
 
-
+"""
 rigging_GRPs = []
 
 rigging_GRP = pm.group( em=True, name= 'rigging_GRP' )
@@ -604,8 +606,8 @@ CreateArm(rigging_GRPs, R_CTRL_List, 'R_', R_jntList, R_IKJntList, R_FKJntList, 
 # parent switch ========================
 spaceGrps = []
 
-#world_LOC = pm.spaceLocator(n ='worldSpace_LOC')
-world_LOC = 'world_LOC'
+world_LOC = pm.spaceLocator(n ='world_LOC')
+#world_LOC = 'world_LOC'
 
 
 spaces_GRP = pm.group( em=True, name= 'spaces_GRP')
@@ -621,7 +623,6 @@ Joint_CTRL_List = L_CTRL_List + R_CTRL_List
 
 # ========= 
 CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'R_arm_IK_CTRL', ['world_LOC', 'L_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
-  
 CreateSpaceSwitch(spaceGrps, world_LOC, LOCConst, 'L_arm_IK_CTRL', ['world_LOC', 'R_arm_IK_CTRL', 'head_CTRL'], Joint_CTRL_List)
-
+"""
 

@@ -316,17 +316,19 @@ class AutoRig(QtWidgets.QMainWindow):
         print "Create Parent switch"
         
         global switch_CTRL_List
+        global LOCinfo
         
         global main_CTRL
         global arm_CTRL_List
         global spaceGrps
         
+        print LOCinfo
         
         itemCount = ctrl_List.count()
         for i in range(itemCount):
             switch_CTRL_List.append(ctrl_List.item(i).text())
         
-        armRig.CreateSpaceSwitch(spaceGrps, LOCinfo[0], LOCinfo[1], main_CTRL, switch_CTRL_List, arm_CTRL_List)
+        #armRig.CreateSpaceSwitch(spaceGrps, LOCinfo[0], LOCinfo[1], str(main_CTRL), switch_CTRL_List, arm_CTRL_List)
         
     # ================================ #  
     def AddMainCtrl(self, Switch_CTRL_name, qMainCtrlBox):
@@ -354,16 +356,25 @@ class AutoRig(QtWidgets.QMainWindow):
             shapes = cmds.listRelatives(str(CTRL_name))  
 
             if len(shapes) > 0: 
-                if pm.objectType(shapes[0], isType='nurbsCurve') or pm.objectType(shapes[0], isType='locator'):
+            
+                if pm.objectType(shapes[0], isType='locator'):
+                    space_CTRL = ''
+                    splitString = CTRL_name.split('|', 3)
+                    
+                    space_CTRL = splitString[1]
+                    
+                    if str(space_CTRL) != str(main_CTRL):
+                        findItem = qList.findItems(space_CTRL,8) 
+                        if len(findItem) <= 0:
+                            qList.addItem(space_CTRL)
+                    
+                if pm.objectType(shapes[0], isType='nurbsCurve'):
                     
                     space_CTRL = ''
                     splitString = CTRL_name.split('|', 3)
                     
-                    if shapes[0][1] == '_':
-                        space_CTRL = splitString[3] 
-                        
-                    else:  
-                        space_CTRL = splitString[1]
+                    length = len(splitString)
+                    space_CTRL = splitString[length - 1] 
 
                     if str(space_CTRL) != str(main_CTRL):
                         findItem = qList.findItems(space_CTRL,8) 

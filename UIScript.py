@@ -10,7 +10,7 @@ path = r'D:\00.Documents\03. Scripting and Programming\Maya Scripts'
 if path not in sys.path:
     sys.path.append(path)
     
-import armRig
+#import armRig
 
 # Qt
 try:
@@ -56,9 +56,11 @@ class AutoRig(QtWidgets.QMainWindow):
 
         self.setWindowTitle('Auto Rig')
         self.setObjectName(windowName)
-        self.resize(400, 150)
-
+        self.resize(350, 400)
+        self.primary_layout = QtWidgets.QVBoxLayout()
+        
         self.BuildUI()
+        self.raise_()
         
     # ================================ #  
     def CloseWindow(self, windowName):
@@ -68,48 +70,88 @@ class AutoRig(QtWidgets.QMainWindow):
     # ================================ #   
     def BuildUI(self):
         
-        # Main widget
-        widget = QtWidgets.QWidget(self)
-        self.setCentralWidget(widget)
+        #mainLayout = QtWidgets.QGridLayout() 
         
-        # Layout
-        lot = QtWidgets.QGridLayout()
-        widget.setLayout(lot)
+        # Arm Rig Creation ========================================
+                
+        # Arm label
+        textArm = QtWidgets.QLabel("Create Arm Rig", parent=self)
+        textArm.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        textArm.setFixedHeight(50)
+        textArm.setFixedWidth(250)
+        textArm.move(5,10)
+        textArm.setFont(QtGui.QFont('MS Sans Serif', 11, QtGui.QFont.Bold))
+
+        # Check box L Arm
+        create_L_ArmCkeckBox = QtWidgets.QCheckBox("Create Left Arm",parent=self)
+        create_L_ArmCkeckBox.move(15,30)
+        create_L_ArmCkeckBox.setFixedHeight(24)
+        create_L_ArmCkeckBox.setFixedWidth(250)
         
+        # Check box R Arm
+        create_R_ArmCkeckBox = QtWidgets.QCheckBox("Create Right Arm",parent=self)
+        create_R_ArmCkeckBox.move(15,50)
+        create_R_ArmCkeckBox.setFixedHeight(24)
+        create_R_ArmCkeckBox.setFixedWidth(250)
+        
+        # arm creation button 
+        createArmButton = QtWidgets.QPushButton("Create Arm rig", parent=self)
+        createArmButton.setFixedWidth(100)
+        createArmButton.move(125,90)
+        createArmButton.clicked.connect(lambda: self.CreateArms())
+        
+        # Arm Prnt switch Creation ====================================
+                
+        # Arm label
+        textArm = QtWidgets.QLabel("Create Parent Switch", parent=self)
+        textArm.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        textArm.setFixedHeight(50)
+        textArm.setFixedWidth(250)
+        textArm.move(5,140)
+        textArm.setFont(QtGui.QFont('MS Sans Serif', 11, QtGui.QFont.Bold))
+        
+        # add main ctrl =====
+        
+        # Arm label
+        textArm = QtWidgets.QLabel("Main CTRL", parent=self)
+        textArm.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        textArm.setFixedHeight(50)
+        textArm.setFixedWidth(60)
+        textArm.move(5,170)
+        
+        # 
+        prntSwitchMain_CTRL = self.currentDirTxt = QtWidgets.QLineEdit(parent=self)
+        prntSwitchMain_CTRL.setStyleSheet("border: 1px groove black; border-radius: 4px;")
+        #prntSwitchAdd.returnPressed.connect(lambda: self.LoadMesh(col_mesh_view.text()))
+        prntSwitchMain_CTRL.setFixedHeight(20)
+        prntSwitchMain_CTRL.setFixedWidth(200)
+        prntSwitchMain_CTRL.move(65,165)
+        
+        # arm creation button 
+        addMainCtrl = QtWidgets.QPushButton("Select", parent=self)
+        addMainCtrl.setFixedWidth(55)
+        addMainCtrl.setFixedHeight(20)
+        addMainCtrl.move(275,164)
+        #addMainCtrl.clicked.connect(lambda: self.CreateArms())
+        
+        # add ctrl =====
+        prntSwitchAdd = self.currentDirTxt = QtWidgets.QLineEdit(parent=self)
+        prntSwitchAdd.setStyleSheet("border: 1px groove black; border-radius: 4px;")
+        #prntSwitchAdd.returnPressed.connect(lambda: self.LoadMesh(col_mesh_view.text()))
+        prntSwitchAdd.setFixedHeight(20)
+        prntSwitchAdd.setFixedWidth(250)
+        prntSwitchAdd.move(5,210)
+        
+        # 
         """
-        # collision mesh viewer
-        global col_mesh_view
-        col_mesh_view = self.currentDirTxt = QtWidgets.QLineEdit()
-        col_mesh_view.setStyleSheet("border: 1px groove black; border-radius: 4px;")
-        col_mesh_view.returnPressed.connect(lambda: self.LoadMesh(col_mesh_view.text()))
-        lot.addWidget(self.currentDirTxt,0,0,1,10,0)
-        
-        # load mesh button  
-        loadMeshButton = QtWidgets.QPushButton()
-        loadMeshButton.setText("Load Mesh")
-        loadMeshButton.clicked.connect(lambda: self.LoadMesh(col_mesh_view.text()))
-        lot.addWidget(loadMeshButton,0,10,1,1,0)   
-        
-        # nurb mesh viewer
-        global nurb_mesh_view
-        nurb_mesh_view = self.currentDirTxt = QtWidgets.QLineEdit()
-        nurb_mesh_view.setStyleSheet("border: 1px groove black; border-radius: 4px;")
-        nurb_mesh_view.returnPressed.connect(lambda: self.LoadNurb(nurb_mesh_view.text()))
-        lot.addWidget(self.currentDirTxt,1,0,1,10,0)
-        
-        # load nurb button  
-        loadNURBButton = QtWidgets.QPushButton()
-        loadNURBButton.setText("Load Nurb")
-        loadNURBButton.clicked.connect(lambda: self.LoadNurb(nurb_mesh_view.text()))
-        lot.addWidget(loadNURBButton,1,10,1,1,0) 
-        
-        # create button  
-        createButton = QtWidgets.QPushButton()
-        createButton.setText("Create NURB collision rig")
-        createButton.clicked.connect(lambda: self.CreateCurve())
-        lot.addWidget(createButton,2,0,1,11,0) 
+        listW = QtWidgets.QListWidget(parent=self)
+        listW.setFixedWidth(340)
+        listW.move(5,170)
         """
-        
+
+
+    def CreateArms(self):
+        print "CREATE ARMS"        
         
 # ======================================================================================= # 
 win = AutoRig()
